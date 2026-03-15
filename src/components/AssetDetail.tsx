@@ -93,8 +93,6 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
     { label: 'Tags', value: <Text>{asset.tags.length > 0 ? asset.tags.join(', ') : '—'}</Text> },
     { label: 'Composants', value: <Text>{asset.components.length > 0 ? asset.components.map(c => c.version ? `${c.name}@${c.version}` : c.name).join(', ') : '—'}</Text> },
     { label: 'Risques liés', value: <Text>{asset.related_risks.length > 0 ? asset.related_risks.join(', ') : '—'}</Text> },
-    { label: 'Créé le', value: <Text color="gray">{asset.created_at}</Text> },
-    { label: 'Modifié le', value: <Text color="gray">{asset.updated_at}</Text> },
   ];
 
   // Split into two columns

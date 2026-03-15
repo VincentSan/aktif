@@ -5,6 +5,8 @@ import type { Config } from './types/config.js';
 
 const HOME = homedir();
 
+export const RC_PATH = join(HOME, '.aktifrc');
+
 const DEFAULTS: Config = {
   db: join(HOME, '.aktif', 'aktif.db'),
   user: process.env.USER ?? 'unknown',
@@ -25,7 +27,7 @@ export interface CliOverrides {
 }
 
 export function resolveConfig(cliOverrides: CliOverrides = {}): Config {
-  const homeRc = readJsonFile(join(HOME, '.aktifrc'));
+  const homeRc = readJsonFile(RC_PATH);
   const localConfig = readJsonFile(resolve(process.cwd(), 'aktif.config.json'));
 
   const envOverrides: Partial<Config> = {};

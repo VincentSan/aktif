@@ -1,6 +1,6 @@
 {
   "name": "aktif",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI + TUI pour inventaire d'actifs ISO 27001 A.5.9",
   "type": "module",
   "bin": {

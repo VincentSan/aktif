@@ -5,19 +5,20 @@ import { appendAuditLog } from '../db/queries/audit-log.js';
 import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
 import { ASSET_TYPES, CLASSIFICATIONS, ASSET_STATUSES } from '../types/asset.js';
+import { addDays, today } from '../utils/date.js';
 
 export function registerAssetEdit(asset: Command): void {
   asset
     .command('edit <id>')
     .description('Modifier un actif')
-    .option('--name <n>', 'Nom')
-    .option('--type <t>', `Type (${ASSET_TYPES.join('|')})`)
-    .option('--description <d>', 'Description')
+    .option('-n, --name <n>', 'Nom')
+    .option('-t, --type <t>', `Type (${ASSET_TYPES.join('|')})`)
+    .option('-d, --description <d>', 'Description')
     .option('--location <l>', 'Localisation')
-    .option('--owner <o>', 'Propriétaire')
-    .option('--classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
+    .option('-o, --owner <o>', 'Propriétaire')
+    .option('-c, --classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
     .option('--access-restrictions <a>', "Restrictions d'accès")
-    .option('--status <s>', `Statut (${ASSET_STATUSES.join('|')})`)
+    .option('-s, --status <s>', `Statut (${ASSET_STATUSES.join('|')})`)
     .option('--review-date <d>', 'Date de révision (YYYY-MM-DD)')
     .option('--next-review-date <d>', 'Prochaine révision (YYYY-MM-DD)')
     .option('--disposal-method <m>', 'Méthode de mise au rebut')
@@ -49,7 +50,12 @@ export function registerAssetEdit(asset: Command): void {
       if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
       if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
-      if (opts.nextReviewDate !== undefined) changes.next_review_date = opts.nextReviewDate;
+      const config = getConfig();
+      if (opts.nextReviewDate === undefined) {
+        changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
+      } else {
+        changes.next_review_date = opts.nextReviewDate;
+      }
       if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
       if (opts.tags !== undefined) {
         try { changes.tags = JSON.parse(opts.tags); } catch { /* ignore */ }
@@ -67,7 +73,6 @@ export function registerAssetEdit(asset: Command): void {
       }
 
       const db = getDb();
-      const config = getConfig();
 
       try {
         const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2]);
