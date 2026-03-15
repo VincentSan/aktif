@@ -1,0 +1,5 @@
+{
+  "db": "/path/to/aktif.db",
+  "user": "Sophie Martin",
+  "defaultReviewPeriodDays": 365
+}

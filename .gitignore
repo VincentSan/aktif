@@ -1,9 +1,14 @@
 # Claude Code
 .claude/
+settings.json
+
+# Bun build cache
+.*.bun-build
 
 # Node
 node_modules/
 dist/
+bin/
 build/
 *.tsbuildinfo
 
@@ -14,6 +19,8 @@ build/
 
 # SQLite
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 

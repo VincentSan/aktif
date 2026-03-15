@@ -1,0 +1,48 @@
+{
+  "name": "aktif",
+  "version": "0.1.0",
+  "description": "CLI + TUI pour inventaire d'actifs ISO 27001 A.5.9",
+  "type": "module",
+  "bin": {
+    "aktif": "./src/cli.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "build": "bun run build:macos-arm64 && bun run build:macos-x64 && bun run build:linux-x64",
+    "build:macos-arm64": "bun build src/cli.ts --compile --target=bun-darwin-arm64 --outfile bin/aktif-macos-arm64",
+    "build:macos-x64": "bun build src/cli.ts --compile --target=bun-darwin-x64 --outfile bin/aktif-macos-x64",
+    "build:linux-x64": "bun build src/cli.ts --compile --target=bun-linux-x64 --outfile bin/aktif-linux-x64"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
+    "drizzle-orm": "^0.45.1",
+    "ink": "^6.8.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-table": "^3.1.0",
+    "ink-text-input": "^6.0.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^19",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.10",
+    "@types/react": "^19",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "drizzle-kit": "^0.31.9",
+    "eslint": "^10.0.3",
+    "prettier": "^3.8.1",
+    "react-devtools-core": "^7.0.1",
+    "typescript": "^5.9.3"
+  }
+}
