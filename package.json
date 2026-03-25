@@ -17,7 +17,8 @@
     "build": "bun run build:macos-arm64 && bun run build:macos-x64 && bun run build:linux-x64",
     "build:macos-arm64": "bun build src/cli.ts --compile --target=bun-darwin-arm64 --outfile bin/aktif-macos-arm64",
     "build:macos-x64": "bun build src/cli.ts --compile --target=bun-darwin-x64 --outfile bin/aktif-macos-x64",
-    "build:linux-x64": "bun build src/cli.ts --compile --target=bun-linux-x64 --outfile bin/aktif-linux-x64"
+    "build:linux-x64": "bun build src/cli.ts --compile --target=bun-linux-x64 --outfile bin/aktif-linux-x64",
+    "clean": "rm -f bin/aktif-macos-arm64 bin/aktif-macos-x64 bin/aktif-linux-x64 .*.bun-build"
   },
   "dependencies": {
     "commander": "^14.0.3",

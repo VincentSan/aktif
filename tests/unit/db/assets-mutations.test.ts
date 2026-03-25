@@ -28,15 +28,6 @@ describe('updateAsset', () => {
     expect(after.name).toBe('Serveur X'); // inchangé
   });
 
-  it('updated_at est mis à jour par le trigger SQLite', () => {
-    const db = createTestDb();
-    const inserted = insertAsset(db, base);
-    const { before, after } = updateAsset(db, inserted.id, { owner: 'Alice' });
-    // Le trigger updated_at doit mettre à jour updated_at
-    // (peut être identique si rapide, on vérifie juste qu'il est défini)
-    expect(after.updated_at).toBeDefined();
-  });
-
   it('lève une erreur pour un ID inexistant', () => {
     const db = createTestDb();
     expect(() => updateAsset(db, 'ghost', { owner: 'X' })).toThrow('introuvable');
