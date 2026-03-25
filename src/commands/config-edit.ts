@@ -1,7 +1,7 @@
 import { spawnSync } from 'child_process';
-import { existsSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import type { Command } from 'commander';
-import { RC_PATH } from './asset-config.js';
+import { RC_PATH } from '../config.js';
 
 const RC_TEMPLATE =
   JSON.stringify(
@@ -19,9 +19,10 @@ export function registerConfigEdit(parent: Command): void {
     .command('edit')
     .description("Ouvrir ~/.aktifrc dans l'éditeur système")
     .action(() => {
-      if (!existsSync(RC_PATH)) {
-        writeFileSync(RC_PATH, RC_TEMPLATE, 'utf8');
+      try {
+        writeFileSync(RC_PATH, RC_TEMPLATE, { flag: 'wx' });
         process.stdout.write(`Fichier ${RC_PATH} créé avec le template par défaut.\n`);
+      } catch {
       }
 
       const editor = process.env.EDITOR ?? process.env.VISUAL ?? 'vi';

@@ -32,7 +32,6 @@ program
   .version(VERSION)
   .option('--db <path>', 'Chemin vers le fichier SQLite');
 
-// Hook preAction : initialise la connexion et les migrations avant chaque commande
 program.hook('preAction', () => {
   const opts = program.opts<{ db?: string }>();
   const config = resolveConfig({ db: opts.db });
@@ -41,7 +40,6 @@ program.hook('preAction', () => {
   setContext(db, config);
 });
 
-// Enregistrer le groupe de commandes 'asset'
 const asset = program.command('asset').description('Gestion des actifs');
 registerAssetAdd(asset);
 registerAssetList(asset);
@@ -61,19 +59,6 @@ registerAssetConfig(asset);
 
 export { asset };
 
-// Enregistrer le groupe de commandes 'owner'
-const owner = program.command('owner').description('Gestion des propriétaires');
-registerOwnerAdd(owner);
-registerOwnerList(owner);
-registerOwnerDelete(owner);
-export { owner };
-
-// Groupe de commandes 'config'
-const configCmd = program.command('config').description('Configuration de aktif');
-registerConfigEdit(configCmd);
-export { configCmd };
-
-// Commande top-level 'tui'
 program
   .command('tui')
   .description("Lancer l'interface interactive (TUI)")
@@ -84,15 +69,23 @@ program
     render(React.default.createElement(App, null));
   });
 
+const owner = program.command('owner').description('Gestion des propriétaires');
+registerOwnerAdd(owner);
+registerOwnerList(owner);
+registerOwnerDelete(owner);
+export { owner };
+
+const config = program.command('config').description('Configuration de aktif');
+registerConfigEdit(config);
+export { config };
+
 export { getDb, getConfig } from './context.js';
 
-// Gestion des erreurs non rattrapées
 process.on('uncaughtException', (err) => {
   process.stderr.write(`Erreur: ${err.message}\n`);
   process.exit(1);
 });
 
-// Point d'entrée
 program.parseAsync(process.argv).catch((err: Error) => {
   process.stderr.write(`Erreur: ${err.message}\n`);
   process.exit(1);

@@ -19,8 +19,6 @@ const HEADERS: (keyof Asset)[] = [
   'tags',
   'components',
   'related_risks',
-  'created_at',
-  'updated_at',
 ];
 
 export function exportToCsv(assets: Asset[]): string {

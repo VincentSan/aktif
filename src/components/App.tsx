@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text } from 'ink';
+import { Text, useInput } from 'ink';
 import { AssetTable } from './AssetTable.js';
 import { AssetForm } from './AssetForm.js';
 import { AssetDetail } from './AssetDetail.js';
@@ -24,6 +24,12 @@ export function App(): React.ReactElement {
   const onNavigate: NavigateFunction = (view, assetId?, formMode?) => {
     setState({ view, selectedAssetId: assetId, formMode });
   };
+
+  useInput((input) => {
+    if (state.view === 'list' && input === 'o') {
+      onNavigate('owners');
+    }
+  });
 
   switch (state.view) {
     case 'list':

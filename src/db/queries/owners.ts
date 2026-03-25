@@ -36,16 +36,12 @@ export function deleteOwner(db: Db, id: string): void {
   db.delete(owners).where(eq(owners.id, id)).run();
 }
 
-export function deleteAssetsByOwnerId(db: Db, ownerId: string): void {
-  db.delete(assets).where(eq(assets.owner_id, ownerId)).run();
-}
-
 export function getAssetsByOwnerId(db: Db, ownerId: string): Asset[] {
   return db.select().from(assets).where(eq(assets.owner_id, ownerId)).all().map(rowToAsset);
 }
 
 export function reassignAssets(db: Db, fromOwnerId: string, toOwnerId: string): void {
-  const newOwner = db.select().from(owners).where(eq(owners.id, toOwnerId)).get() as Owner | undefined;
+  const newOwner = getOwnerById(db, toOwnerId);
   db.update(assets)
     .set({ owner_id: toOwnerId, owner: newOwner?.name ?? null })
     .where(eq(assets.owner_id, fromOwnerId))
@@ -57,4 +53,8 @@ export function clearOwnerOnAssets(db: Db, ownerId: string): void {
     .set({ owner_id: null, owner: null })
     .where(eq(assets.owner_id, ownerId))
     .run();
+}
+
+export function deleteAssetsByOwnerId(db: Db, ownerId: string): void {
+  db.delete(assets).where(eq(assets.owner_id, ownerId)).run();
 }

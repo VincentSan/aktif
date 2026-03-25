@@ -1,6 +1,6 @@
-import * as readline from 'readline';
 import type { Command } from 'commander';
-import { getDb } from '../cli.js';
+import * as readline from 'readline';
+import { getDb } from '../context.js';
 import {
   deleteOwner,
   getOwnerById,
@@ -9,6 +9,10 @@ import {
   clearOwnerOnAssets,
   deleteAssetsByOwnerId,
 } from '../db/queries/owners.js';
+
+function ask(rl: readline.Interface, question: string): Promise<string> {
+  return new Promise((resolve) => rl.question(question, resolve));
+}
 
 export function registerOwnerDelete(parent: Command): void {
   parent
@@ -44,42 +48,40 @@ export function registerOwnerDelete(parent: Command): void {
           deleteAssetsByOwnerId(db, id);
           process.stdout.write(`${linkedAssets.length} actif(s) supprimé(s).\n`);
         } else {
-          // Mode interactif
-          process.stdout.write(
-            `L'owner "${owner.name}" a ${linkedAssets.length} actif(s) lié(s).\n` +
+          const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+          try {
+            const answer = await ask(
+              rl,
+              `L'owner "${owner.name}" a ${linkedAssets.length} actif(s) lié(s).\n` +
               `Choisissez une action :\n` +
               `  [1] Supprimer tous les actifs liés\n` +
-              `  [2] Réassigner à un autre owner (vous devrez fournir l'ID)\n` +
+              `  [2] Réassigner à un autre owner\n` +
               `  [3] Mettre owner à null sur les actifs\n` +
               `  [q] Annuler\n` +
               `> `,
-          );
+            );
 
-          const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-          const answer = await new Promise<string>((resolve) => rl.once('line', resolve));
-          rl.close();
-
-          if (answer === '1') {
-            deleteAssetsByOwnerId(db, id);
-            process.stdout.write(`${linkedAssets.length} actif(s) supprimé(s).\n`);
-          } else if (answer === '2') {
-            process.stdout.write('ID du nouvel owner : ');
-            const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
-            const newOwnerId = await new Promise<string>((resolve) => rl2.once('line', resolve));
-            rl2.close();
-            const targetOwner = getOwnerById(db, newOwnerId.trim());
-            if (!targetOwner) {
-              process.stderr.write(`Erreur: owner "${newOwnerId.trim()}" introuvable\n`);
-              process.exit(1);
+            if (answer.trim() === '1') {
+              deleteAssetsByOwnerId(db, id);
+              process.stdout.write(`${linkedAssets.length} actif(s) supprimé(s).\n`);
+            } else if (answer.trim() === '2') {
+              const newOwnerId = await ask(rl, 'ID du nouvel owner : ');
+              const targetOwner = getOwnerById(db, newOwnerId.trim());
+              if (!targetOwner) {
+                process.stderr.write(`Erreur: owner "${newOwnerId.trim()}" introuvable\n`);
+                process.exit(1);
+              }
+              reassignAssets(db, id, newOwnerId.trim());
+              process.stdout.write(`${linkedAssets.length} actif(s) réassigné(s) à "${targetOwner.name}".\n`);
+            } else if (answer.trim() === '3') {
+              clearOwnerOnAssets(db, id);
+              process.stdout.write(`${linkedAssets.length} actif(s) mis à jour (owner = null).\n`);
+            } else {
+              process.stdout.write('Annulé.\n');
+              process.exit(0);
             }
-            reassignAssets(db, id, newOwnerId.trim());
-            process.stdout.write(`${linkedAssets.length} actif(s) réassigné(s) à "${targetOwner.name}".\n`);
-          } else if (answer === '3') {
-            clearOwnerOnAssets(db, id);
-            process.stdout.write(`${linkedAssets.length} actif(s) mis à jour (owner = null).\n`);
-          } else {
-            process.stdout.write('Annulé.\n');
-            process.exit(0);
+          } finally {
+            rl.close();
           }
         }
       }

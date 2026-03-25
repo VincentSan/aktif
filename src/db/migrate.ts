@@ -71,6 +71,47 @@ BEGIN
   UPDATE \`assets\` SET \`updated_at\` = DATETIME('now') WHERE \`id\` = NEW.\`id\`;
 END;
   `,
+
+  // 0001 — fusionner entry_date + created_at → entry_date DATETIME, supprimer updated_at
+  `
+CREATE TABLE IF NOT EXISTS \`assets_new\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL,
+  \`type\` text NOT NULL,
+  \`description\` text,
+  \`location\` text,
+  \`owner\` text,
+  \`owner_id\` text REFERENCES \`owners\`(\`id\`),
+  \`classification\` text,
+  \`access_restrictions\` text,
+  \`status\` text DEFAULT 'actif' NOT NULL,
+  \`entry_date\` text DEFAULT (DATETIME('now')) NOT NULL,
+  \`review_date\` text,
+  \`next_review_date\` text,
+  \`disposal_method\` text,
+  \`tags\` text DEFAULT '[]' NOT NULL,
+  \`components\` text DEFAULT '[]' NOT NULL,
+  \`related_risks\` text DEFAULT '[]' NOT NULL
+);
+
+INSERT INTO \`assets_new\`
+  SELECT \`id\`, \`name\`, \`type\`, \`description\`, \`location\`, \`owner\`, \`owner_id\`,
+    \`classification\`, \`access_restrictions\`, \`status\`,
+    \`created_at\` AS \`entry_date\`,
+    \`review_date\`, \`next_review_date\`, \`disposal_method\`,
+    \`tags\`, \`components\`, \`related_risks\`
+  FROM \`assets\`;
+
+DROP TRIGGER IF EXISTS \`assets_updated_at\`;
+DROP TABLE \`assets\`;
+ALTER TABLE \`assets_new\` RENAME TO \`assets\`;
+
+CREATE INDEX IF NOT EXISTS \`idx_assets_type\` ON \`assets\`(\`type\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_status\` ON \`assets\`(\`status\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_classification\` ON \`assets\`(\`classification\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_next_review_date\` ON \`assets\`(\`next_review_date\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_owner\` ON \`assets\`(\`owner\`);
+  `,
 ];
 
 export function runMigrations(sqlite: Database): void {

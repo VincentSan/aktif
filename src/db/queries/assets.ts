@@ -6,19 +6,16 @@ import type { Asset } from '../../types/asset.js';
 import type { AssetFilters } from '../../types/filters.js';
 import { serializeJson, rowToAsset } from './utils.js';
 
-export type NewAsset = Omit<Asset, 'id' | 'created_at' | 'updated_at'>;
+export type NewAsset = Omit<Asset, 'id'>;
 
 export function insertAsset(db: Db, data: NewAsset): Asset {
   const id = uuidv4();
-  const now = new Date().toISOString();
   const values = {
     id,
     ...data,
     tags: serializeJson(data.tags),
     components: serializeJson(data.components),
     related_risks: serializeJson(data.related_risks),
-    created_at: now,
-    updated_at: now,
   };
   const rows = db.insert(assets).values(values).returning().all();
   return rowToAsset(rows[0]);
@@ -49,7 +46,7 @@ export function listAssets(db: Db, filters: AssetFilters = {}): Asset[] {
   return rows.map(rowToAsset);
 }
 
-export type AssetUpdate = Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>>;
+export type AssetUpdate = Partial<Omit<Asset, 'id'>>;
 
 export function updateAsset(db: Db, id: string, changes: AssetUpdate): { before: Asset; after: Asset } {
   const before = getAssetById(db, id);

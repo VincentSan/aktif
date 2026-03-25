@@ -107,39 +107,36 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
 
       {/* En-tête tableau */}
       <Box>
-        <Text bold color="blue">
-          {'  '}
-          {col('ID', 8)}
-          {'  '}
-          {col('Nom', 20)}
-          {'  '}
-          {col('Type', 13)}
-          {'  '}
-          {col('Classification', 15)}
-          {'  '}
-          {col('Propriétaire', 14)}
-          {'  '}
-          {'Statut          '}
-          {'Révision'}
-        </Text>
+        <Box width={2} flexShrink={0} />
+        <Box width={8}  flexShrink={0}><Text bold color="blue">ID</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={20} flexShrink={0}><Text bold color="blue">Nom</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={13} flexShrink={0}><Text bold color="blue">Type</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={15} flexShrink={0}><Text bold color="blue">Classification</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={14} flexShrink={0}><Text bold color="blue">Propriétaire</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={14} flexShrink={0}><Text bold color="blue">Statut</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box flexShrink={0}><Text bold color="blue">Révision</Text></Box>
       </Box>
       <Box>
-        <Text color="blue">
-          {'  '}
-          {'─'.repeat(8)}
-          {'  '}
-          {'─'.repeat(20)}
-          {'  '}
-          {'─'.repeat(13)}
-          {'  '}
-          {'─'.repeat(15)}
-          {'  '}
-          {'─'.repeat(14)}
-          {'  '}
-          {'─'.repeat(14)}
-          {'  '}
-          {'─'.repeat(10)}
-        </Text>
+        <Box width={2}  flexShrink={0} />
+        <Box width={8}  flexShrink={0}><Text color="blue">{'─'.repeat(8)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={20} flexShrink={0}><Text color="blue">{'─'.repeat(20)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={13} flexShrink={0}><Text color="blue">{'─'.repeat(13)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={15} flexShrink={0}><Text color="blue">{'─'.repeat(15)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={14} flexShrink={0}><Text color="blue">{'─'.repeat(14)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box width={14} flexShrink={0}><Text color="blue">{'─'.repeat(14)}</Text></Box>
+        <Box width={2}  flexShrink={0} />
+        <Box flexShrink={0}><Text color="blue">{'─'.repeat(10)}</Text></Box>
       </Box>
 
       {/* Lignes */}
@@ -150,30 +147,23 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
       )}
       {filtered.map((asset, index) => {
         const isSelected = index === clampedIndex && !filterFocused;
-        const prefix = isSelected ? '> ' : '  ';
 
         return (
           <Box key={asset.id}>
-            <Text bold={isSelected} inverse={isSelected}>
-              {prefix}
-              {col(asset.id, 8)}
-              {'  '}
-              {col(asset.name, 20)}
-              {'  '}
-              {col(asset.type, 13)}
-              {'  '}
-            </Text>
-            <ClassificationBadge classification={asset.classification} />
-            <Text bold={isSelected} inverse={isSelected}>
-              {'  '}
-              {col(asset.owner, 14)}
-              {'  '}
-            </Text>
-            <StatusBadge status={asset.status} />
-            <Text bold={isSelected} inverse={isSelected}>
-              {'  '}
-              {formatDate(asset.next_review_date)}
-            </Text>
+            <Box width={2}  flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{isSelected ? '> ' : '  '}</Text></Box>
+            <Box width={8}  flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{asset.id.substring(0, 8)}</Text></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box width={20} flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{col(asset.name, 20)}</Text></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box width={13} flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{col(asset.type, 13)}</Text></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box width={15} flexShrink={0}><ClassificationBadge classification={asset.classification} /></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box width={14} flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{col(asset.owner, 14)}</Text></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box width={14} flexShrink={0}><StatusBadge status={asset.status} /></Box>
+            <Box width={2}  flexShrink={0} />
+            <Box flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{formatDate(asset.next_review_date)}</Text></Box>
           </Box>
         );
       })}

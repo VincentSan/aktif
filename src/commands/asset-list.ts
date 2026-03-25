@@ -11,10 +11,10 @@ export function registerAssetList(asset: Command): void {
   asset
     .command('list')
     .description('Lister les actifs')
-    .option('--type <t>', `Filtrer par type (${ASSET_TYPES.join('|')})`)
-    .option('--classification <c>', `Filtrer par classification (${CLASSIFICATIONS.join('|')})`)
-    .option('--owner <o>', 'Filtrer par propriétaire')
-    .option('--status <s>', `Filtrer par statut (${ASSET_STATUSES.join('|')})`)
+    .option('-t, --type <t>', `Filtrer par type (${ASSET_TYPES.join('|')})`)
+    .option('-c, --classification <c>', `Filtrer par classification (${CLASSIFICATIONS.join('|')})`)
+    .option('-o, --owner <o>', 'Filtrer par propriétaire')
+    .option('-s, --status <s>', `Filtrer par statut (${ASSET_STATUSES.join('|')})`)
     .action((opts) => {
       const db = getDb();
       const filters: AssetFilters = {};

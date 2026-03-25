@@ -11,14 +11,14 @@ export function registerAssetEdit(asset: Command): void {
   asset
     .command('edit <id>')
     .description('Modifier un actif')
-    .option('--name <n>', 'Nom')
-    .option('--type <t>', `Type (${ASSET_TYPES.join('|')})`)
-    .option('--description <d>', 'Description')
+    .option('-n, --name <n>', 'Nom')
+    .option('-t, --type <t>', `Type (${ASSET_TYPES.join('|')})`)
+    .option('-d, --description <d>', 'Description')
     .option('--location <l>', 'Localisation')
-    .option('--owner <o>', 'Propriétaire')
-    .option('--classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
+    .option('-o, --owner <o>', 'Propriétaire')
+    .option('-c, --classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
     .option('--access-restrictions <a>', "Restrictions d'accès")
-    .option('--status <s>', `Statut (${ASSET_STATUSES.join('|')})`)
+    .option('-s, --status <s>', `Statut (${ASSET_STATUSES.join('|')})`)
     .option('--review-date <d>', 'Date de révision (YYYY-MM-DD)')
     .option('--next-review-date <d>', 'Prochaine révision (YYYY-MM-DD)')
     .option('--disposal-method <m>', 'Méthode de mise au rebut')
@@ -26,7 +26,6 @@ export function registerAssetEdit(asset: Command): void {
     .option('--components <json>', 'Composants JSON')
     .option('--related-risks <json>', 'Risques liés JSON')
     .action((id, opts) => {
-      // Validation
       if (opts.type && !ASSET_TYPES.includes(opts.type)) {
         process.stderr.write(`Erreur: type invalide "${opts.type}"\n`);
         process.exit(1);
@@ -50,26 +49,23 @@ export function registerAssetEdit(asset: Command): void {
       if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
       if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
-      if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
-      if (opts.tags !== undefined) {
-        try { changes.tags = JSON.parse(opts.tags); } catch { /* ignore */ }
-      }
-      if (opts.components !== undefined) {
-        try { changes.components = JSON.parse(opts.components); } catch { /* ignore */ }
-      }
-      if (opts.relatedRisks !== undefined) {
-        try { changes.related_risks = JSON.parse(opts.relatedRisks); } catch { /* ignore */ }
-      }
 
-      const db = getDb();
       const config = getConfig();
-
-      // Recalcul automatique de next_review_date si non fourni explicitement
       if (opts.nextReviewDate === undefined) {
         changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
       } else {
         changes.next_review_date = opts.nextReviewDate;
       }
+
+      if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
+      if (opts.tags !== undefined) {
+      }
+      if (opts.components !== undefined) {
+      }
+      if (opts.relatedRisks !== undefined) {
+      }
+
+      const db = getDb();
 
       try {
         const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2]);
