@@ -5,8 +5,9 @@ import { AssetForm } from './AssetForm.js';
 import { AssetDetail } from './AssetDetail.js';
 import { AssetHistory } from './AssetHistory.js';
 import { ComplianceDashboard } from './ComplianceDashboard.js';
+import { OwnerManager } from './OwnerManager.js';
 
-type View = 'list' | 'detail' | 'form' | 'history' | 'dashboard';
+type View = 'list' | 'detail' | 'form' | 'history' | 'dashboard' | 'owners';
 type FormMode = 'add' | 'edit';
 
 interface AppState {
@@ -41,5 +42,7 @@ export function App(): React.ReactElement {
       return <AssetHistory assetId={state.selectedAssetId!} onNavigate={onNavigate} />;
     case 'dashboard':
       return <ComplianceDashboard onNavigate={onNavigate} />;
+    case 'owners':
+      return <OwnerManager onNavigate={onNavigate} />;
   }
 }
