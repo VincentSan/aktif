@@ -21,6 +21,8 @@ import { registerAssetReport } from './commands/asset-report.js';
 import { registerAssetConfig } from './commands/asset-config.js';
 import { registerOwnerAdd } from './commands/owner-add.js';
 import { registerOwnerList } from './commands/owner-list.js';
+import { registerOwnerDelete } from './commands/owner-delete.js';
+import { registerConfigEdit } from './commands/config-edit.js';
 
 export const program = new Command();
 
@@ -57,9 +59,12 @@ registerAssetImport(asset);
 registerAssetReport(asset);
 registerAssetConfig(asset);
 
-asset
+export { asset };
+
+// Commande top-level TUI
+program
   .command('tui')
-  .description('Lance l\'interface interactive (TUI)')
+  .description("Lancer l'interface interactive (TUI)")
   .action(async () => {
     const { render } = await import('ink');
     const React = await import('react');
@@ -67,13 +72,17 @@ asset
     render(React.default.createElement(App, null));
   });
 
-export { asset };
-
 // Enregistrer le groupe de commandes 'owner'
 const owner = program.command('owner').description('Gestion des propriétaires');
 registerOwnerAdd(owner);
 registerOwnerList(owner);
+registerOwnerDelete(owner);
 export { owner };
+
+// Enregistrer le groupe de commandes 'config'
+const config = program.command('config').description('Configuration de aktif');
+registerConfigEdit(config);
+export { config };
 
 export { getDb, getConfig } from './context.js';
 

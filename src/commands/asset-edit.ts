@@ -5,6 +5,7 @@ import { appendAuditLog } from '../db/queries/audit-log.js';
 import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
 import { ASSET_TYPES, CLASSIFICATIONS, ASSET_STATUSES } from '../types/asset.js';
+import { addDays, today } from '../utils/date.js';
 
 export function registerAssetEdit(asset: Command): void {
   asset
@@ -49,7 +50,12 @@ export function registerAssetEdit(asset: Command): void {
       if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
       if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
-      if (opts.nextReviewDate !== undefined) changes.next_review_date = opts.nextReviewDate;
+      const config = getConfig();
+      if (opts.nextReviewDate === undefined) {
+        changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
+      } else {
+        changes.next_review_date = opts.nextReviewDate;
+      }
       if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
       if (opts.tags !== undefined) {
         try { changes.tags = JSON.parse(opts.tags); } catch { /* ignore */ }
@@ -67,7 +73,6 @@ export function registerAssetEdit(asset: Command): void {
       }
 
       const db = getDb();
-      const config = getConfig();
 
       try {
         const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2]);
