@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import type { Config } from '../types/config.js';
 
-const RC_PATH = join(homedir(), '.aktifrc');
+export const RC_PATH = join(homedir(), '.aktifrc');
 const SUPPORTED_KEYS: Array<keyof Config> = ['db', 'user', 'defaultReviewPeriodDays'];
 
 function readRc(): Partial<Config> {

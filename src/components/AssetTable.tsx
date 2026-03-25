@@ -6,18 +6,12 @@ import { getDb } from '../context.js';
 import { formatDate } from '../utils/date.js';
 import { StatusBadge } from './shared/StatusBadge.js';
 import { ClassificationBadge } from './shared/ClassificationBadge.js';
+import { col } from './shared/col.js';
 import type { Asset } from '../types/asset.js';
 import type { NavigateFunction } from './App.js';
 
 interface AssetTableProps {
   onNavigate: NavigateFunction;
-}
-
-// Tronque ou complète une chaîne à la largeur donnée
-function col(value: string | null | undefined, width: number): string {
-  const str = value ?? '—';
-  if (str.length > width) return str.slice(0, width - 1) + '…';
-  return str.padEnd(width);
 }
 
 export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement {
@@ -81,6 +75,10 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
       }
       if (input === 'd') {
         onNavigate('dashboard');
+        return;
+      }
+      if (input === 'o') {
+        onNavigate('owners');
         return;
       }
       if (input === 'q') {

@@ -26,7 +26,6 @@ export function registerAssetEdit(asset: Command): void {
     .option('--components <json>', 'Composants JSON')
     .option('--related-risks <json>', 'Risques liés JSON')
     .action((id, opts) => {
-      // Validation
       if (opts.type && !ASSET_TYPES.includes(opts.type)) {
         process.stderr.write(`Erreur: type invalide "${opts.type}"\n`);
         process.exit(1);
@@ -50,26 +49,20 @@ export function registerAssetEdit(asset: Command): void {
       if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
       if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
+
       const config = getConfig();
       if (opts.nextReviewDate === undefined) {
         changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
       } else {
         changes.next_review_date = opts.nextReviewDate;
       }
+
       if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
       if (opts.tags !== undefined) {
-        try { changes.tags = JSON.parse(opts.tags); } catch { /* ignore */ }
       }
       if (opts.components !== undefined) {
-        try { changes.components = JSON.parse(opts.components); } catch { /* ignore */ }
       }
       if (opts.relatedRisks !== undefined) {
-        try { changes.related_risks = JSON.parse(opts.relatedRisks); } catch { /* ignore */ }
-      }
-
-      if (Object.keys(changes).length === 0) {
-        process.stderr.write('Erreur: aucun champ à modifier\n');
-        process.exit(1);
       }
 
       const db = getDb();

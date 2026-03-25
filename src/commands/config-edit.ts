@@ -23,7 +23,6 @@ export function registerConfigEdit(parent: Command): void {
         writeFileSync(RC_PATH, RC_TEMPLATE, { flag: 'wx' });
         process.stdout.write(`Fichier ${RC_PATH} créé avec le template par défaut.\n`);
       } catch {
-        // File already exists — proceed to open it
       }
 
       const editor = process.env.EDITOR ?? process.env.VISUAL ?? 'vi';

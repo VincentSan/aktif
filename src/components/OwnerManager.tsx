@@ -1,5 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
+import TextInput from 'ink-text-input';
 import { getDb } from '../context.js';
 import {
   listOwners,
@@ -12,147 +13,171 @@ import {
 } from '../db/queries/owners.js';
 import type { Owner } from '../types/owner.js';
 import type { Asset } from '../types/asset.js';
+import { col } from './shared/col.js';
 import type { NavigateFunction } from './App.js';
 
-type OwnerView =
-  | { kind: 'list' }
-  | { kind: 'delete-confirm'; owner: Owner }
-  | { kind: 'delete-action'; owner: Owner; linkedAssets: Asset[] }
-  | { kind: 'reassign-input'; owner: Owner; linkedCount: number };
+type OwnerManagerView =
+  | { view: 'list' }
+  | { view: 'delete-confirm'; ownerId: string; ownerName: string }
+  | { view: 'delete-action'; ownerId: string; ownerName: string; linkedAssets: Asset[] };
 
-interface Props {
+interface OwnerManagerProps {
   onNavigate: NavigateFunction;
 }
 
-export function OwnerManager({ onNavigate }: Props): React.ReactElement {
-  const dbRef = useRef(getDb());
-  const db = dbRef.current;
-  const [owners, setOwners] = useState<Owner[]>(() => listOwners(db));
+export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElement {
+  const [owners, setOwners] = useState<Owner[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [view, setView] = useState<OwnerView>({ kind: 'list' });
-  const [reassignInput, setReassignInput] = useState('');
+  const [state, setState] = useState<OwnerManagerView>({ view: 'list' });
+  const [reassignInputValue, setReassignInputValue] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    setOwners(listOwners(dbRef.current));
-  }, []);
+  const reload = () => {
+    try {
+      setOwners(listOwners(getDb()));
+    } catch {
+      setOwners([]);
+    }
+  };
 
-  const finishDelete = useCallback(
-    (owner: Owner, msg: string) => {
-      deleteOwner(dbRef.current, owner.id);
-      refresh();
-      setView({ kind: 'list' });
-      setReassignInput('');
-      setMessage(msg);
-    },
-    [refresh],
-  );
+  useEffect(() => { reload(); }, []);
+
+  const clampedIndex = owners.length === 0 ? 0 : Math.min(selectedIndex, owners.length - 1);
 
   useInput((input, key) => {
-    if (view.kind === 'list') {
-      if (key.upArrow) setSelectedIndex((i) => Math.max(0, i - 1));
-      else if (key.downArrow) setSelectedIndex((i) => Math.min(owners.length - 1, i + 1));
-      else if (key.escape) onNavigate('list');
-      else if (input === 'd' && owners.length > 0) {
-        const owner = owners[selectedIndex];
+    if (state.view === 'list') {
+      if (key.escape) { onNavigate('list'); return; }
+      if (key.upArrow || input === 'k') { setSelectedIndex((i) => Math.max(0, i - 1)); return; }
+      if (key.downArrow || input === 'j') { setSelectedIndex((i) => Math.min(owners.length - 1, i + 1)); return; }
+      if (input === 'd' && owners.length > 0) {
+        const db = getDb();
+        const owner = owners[clampedIndex];
         const linked = getAssetsByOwnerId(db, owner.id);
-        if (linked.length === 0) {
-          setView({ kind: 'delete-confirm', owner });
+        if (linked.length > 0) {
+          setState({ view: 'delete-action', ownerId: owner.id, ownerName: owner.name, linkedAssets: linked });
         } else {
-          setView({ kind: 'delete-action', owner, linkedAssets: linked });
+          setState({ view: 'delete-confirm', ownerId: owner.id, ownerName: owner.name });
         }
       }
-    } else if (view.kind === 'delete-confirm') {
-      if (input === 'o' || input === 'y') {
-        finishDelete(view.owner, `Owner "${view.owner.name}" supprimé.`);
-      } else if (input === 'n' || key.escape) {
-        setView({ kind: 'list' });
+    } else if (state.view === 'delete-confirm') {
+      if (key.escape || input === 'n') { setState({ view: 'list' }); setMessage(null); return; }
+      if (input === 'o') {
+        deleteOwner(getDb(), state.ownerId);
+        setMessage(`Owner "${state.ownerName}" supprimé.`);
+        setState({ view: 'list' });
+        reload();
       }
-    } else if (view.kind === 'delete-action') {
+    } else if (state.view === 'delete-action') {
+      if (reassignInputValue !== null) return;
+      if (key.escape || input === 'q') { setState({ view: 'list' }); setMessage(null); return; }
+      const db = getDb();
       if (input === '1') {
-        deleteAssetsByOwnerId(db, view.owner.id);
-        finishDelete(
-          view.owner,
-          `${view.linkedAssets.length} actif(s) supprimé(s). Owner "${view.owner.name}" supprimé.`,
-        );
+        deleteAssetsByOwnerId(db, state.ownerId);
+        deleteOwner(db, state.ownerId);
+        setMessage(`${state.linkedAssets.length} actif(s) supprimé(s). Owner "${state.ownerName}" supprimé.`);
+        setState({ view: 'list' });
+        reload();
       } else if (input === '2') {
-        setReassignInput('');
-        setView({ kind: 'reassign-input', owner: view.owner, linkedCount: view.linkedAssets.length });
+        setReassignInputValue('');
       } else if (input === '3') {
-        clearOwnerOnAssets(db, view.owner.id);
-        finishDelete(view.owner, `Owner "${view.owner.name}" supprimé. Actifs mis à jour (owner = null).`);
-      } else if (input === 'q' || key.escape) {
-        setView({ kind: 'list' });
-      }
-    } else if (view.kind === 'reassign-input') {
-      if (key.return) {
-        const targetId = reassignInput.trim();
-        const target = getOwnerById(db, targetId);
-        if (!target) {
-          setMessage(`Owner "${targetId}" introuvable.`);
-          setView({ kind: 'list' });
-        } else {
-          reassignAssets(db, view.owner.id, targetId);
-          finishDelete(
-            view.owner,
-            `Actifs réassignés à "${target.name}". Owner "${view.owner.name}" supprimé.`,
-          );
-        }
-      } else if (key.escape) {
-        setView({ kind: 'list' });
-        setReassignInput('');
-      } else if (key.backspace || key.delete) {
-        setReassignInput((s) => s.slice(0, -1));
-      } else if (input && !key.ctrl && !key.meta) {
-        setReassignInput((s) => s + input);
+        clearOwnerOnAssets(db, state.ownerId);
+        deleteOwner(db, state.ownerId);
+        setMessage(`${state.linkedAssets.length} actif(s) mis à jour (owner = null). Owner "${state.ownerName}" supprimé.`);
+        setState({ view: 'list' });
+        reload();
       }
     }
   });
 
-  if (view.kind === 'list') {
+  const handleReassignSubmit = (value: string) => {
+    if (state.view !== 'delete-action') return;
+    setReassignInputValue(null);
+    const db = getDb();
+    const newOwner = getOwnerById(db, value.trim());
+    if (!newOwner) {
+      setMessage(`Erreur: owner "${value.trim()}" introuvable.`);
+      return;
+    }
+    reassignAssets(db, state.ownerId, value.trim());
+    deleteOwner(db, state.ownerId);
+    setMessage(`${state.linkedAssets.length} actif(s) réassigné(s) à "${newOwner.name}". Owner "${state.ownerName}" supprimé.`);
+    setState({ view: 'list' });
+    reload();
+  };
+
+  if (state.view === 'delete-confirm') {
     return (
-      <Box flexDirection="column">
-        <Text bold color="cyan">Gestion des owners — ↑↓ naviguer, d supprimer, Esc retour</Text>
-        {message && <Text color="green">{message}</Text>}
-        {owners.length === 0 && <Text color="gray">Aucun owner.</Text>}
-        {owners.map((o, i) => (
-          <Text key={o.id} color={i === selectedIndex ? 'yellow' : undefined}>
-            {i === selectedIndex ? '▶ ' : '  '}
-            {o.name} {o.email ? `<${o.email}>` : ''} {o.department ? `[${o.department}]` : ''}
-          </Text>
-        ))}
+      <Box flexDirection="column" paddingX={1}>
+        <Text bold color="yellow">Supprimer l'owner "{state.ownerName}" ?</Text>
+        <Text color="gray">Aucun actif lié. Confirmer ? [o/n]</Text>
       </Box>
     );
   }
 
-  if (view.kind === 'delete-confirm') {
+  if (state.view === 'delete-action') {
     return (
-      <Box flexDirection="column">
-        <Text>Supprimer l'owner <Text bold>"{view.owner.name}"</Text> ? (o/n)</Text>
+      <Box flexDirection="column" paddingX={1}>
+        <Text bold color="yellow">
+          Owner "{state.ownerName}" — {state.linkedAssets.length} actif(s) lié(s)
+        </Text>
+        <Text>Choisissez une action :</Text>
+        <Text>  [1] Supprimer tous les actifs liés</Text>
+        <Text>  [2] Réassigner à un autre owner</Text>
+        <Text>  [3] Mettre owner à null sur les actifs</Text>
+        <Text color="gray">  [q/Esc] Annuler</Text>
+        {reassignInputValue !== null && (
+          <Box marginTop={1}>
+            <Text>ID du nouvel owner : </Text>
+            <TextInput
+              value={reassignInputValue}
+              onChange={setReassignInputValue}
+              onSubmit={handleReassignSubmit}
+              focus
+            />
+          </Box>
+        )}
       </Box>
     );
   }
 
-  if (view.kind === 'delete-action') {
-    return (
-      <Box flexDirection="column">
-        <Text>L'owner <Text bold>"{view.owner.name}"</Text> a {view.linkedAssets.length} actif(s) lié(s).</Text>
-        <Text>[1] Supprimer tous les actifs liés</Text>
-        <Text>[2] Réassigner à un autre owner</Text>
-        <Text>[3] Mettre owner à null sur les actifs</Text>
-        <Text>[q] Annuler</Text>
+  return (
+    <Box flexDirection="column" paddingX={1}>
+      <Text bold color="blue">Propriétaires</Text>
+      {message && <Text color="green">{message}</Text>}
+      <Box marginTop={1}>
+        <Text bold color="blue">
+          {'  '}
+          {col('ID', 36)}
+          {'  '}
+          {col('Nom', 20)}
+          {'  '}
+          {col('Email', 24)}
+          {'  '}
+          {'Département'}
+        </Text>
       </Box>
-    );
-  }
-
-  if (view.kind === 'reassign-input') {
-    return (
-      <Box flexDirection="column">
-        <Text>ID du nouvel owner : {reassignInput}<Text color="gray">█</Text></Text>
-        <Text color="gray">Entrée pour valider, Esc pour annuler</Text>
+      {owners.length === 0 && <Text color="gray">Aucun propriétaire.</Text>}
+      {owners.map((owner, index) => {
+        const isSelected = index === clampedIndex;
+        const prefix = isSelected ? '> ' : '  ';
+        return (
+          <Box key={owner.id}>
+            <Text bold={isSelected} inverse={isSelected}>
+              {prefix}
+              {col(owner.id, 36)}
+              {'  '}
+              {col(owner.name, 20)}
+              {'  '}
+              {col(owner.email, 24)}
+              {'  '}
+              {col(owner.department, 20)}
+            </Text>
+          </Box>
+        );
+      })}
+      <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+        <Text color="gray">↑↓/jk naviguer · d supprimer · Esc retour</Text>
       </Box>
-    );
-  }
-
-  return <Text>...</Text>;
+    </Box>
+  );
 }
