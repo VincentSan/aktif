@@ -43,7 +43,7 @@ export function formatClassification(classification: Classification | null): str
 
 // Tronquer un UUID pour l'affichage
 export function shortId(id: string): string {
-  return id.substring(0, 8) + '…';
+  return id.substring(0, 8);
 }
 
 interface Column {
