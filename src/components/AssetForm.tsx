@@ -152,8 +152,10 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isA
 
   useInput((input, key) => {
     if (!isActive) return;
+
     if (key.upArrow) { setListIndex(i => Math.max(i - 1, 0)); return; }
     if (key.downArrow) { setListIndex(i => Math.min(i + 1, listOptions.length - 1)); return; }
+
     if (key.return) {
       const chosen = listOptions[safeIndex];
       if (!chosen) return;
@@ -163,6 +165,19 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isA
         onChange(chosen.label === OWNER_NONE ? '' : chosen.label, chosen.id);
         onConfirm();
       }
+      return;
+    }
+
+    if (key.backspace || key.delete) {
+      setQuery(q => q.slice(0, -1));
+      setListIndex(0);
+      return;
+    }
+
+    // Capture les caractères imprimables pour le filtre
+    if (!key.ctrl && !key.meta && !key.escape && input && input.length === 1) {
+      setQuery(q => q + input);
+      setListIndex(0);
       return;
     }
   });
@@ -179,8 +194,10 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isA
   return (
     <Box flexDirection="column">
       <Box>
-        <TextInput value={query} onChange={setQuery} focus={true} placeholder="filtrer…" />
-        <Text color="gray"> ↑↓ nav · Enter choisir</Text>
+        <Text color="gray">/ </Text>
+        {query ? <Text color="white">{query}</Text> : <Text color="gray">filtrer…</Text>}
+        <Text color="cyan">▌</Text>
+        <Text color="gray">  ↑↓ nav · Enter choisir · ⌫ effacer</Text>
       </Box>
       {scrollOffset > 0 && (
         <Text color="gray">  ↑ {scrollOffset} de plus</Text>
