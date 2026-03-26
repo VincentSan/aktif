@@ -11,6 +11,7 @@ import {
   clearOwnerOnAssets,
   deleteAssetsByOwnerId,
   updateOwner,
+  insertOwner,
 } from '../db/queries/owners.js';
 import type { Owner } from '../types/owner.js';
 import type { Asset } from '../types/asset.js';
@@ -19,6 +20,7 @@ import type { NavigateFunction } from './App.js';
 
 type OwnerManagerView =
   | { view: 'list' }
+  | { view: 'add-form' }
   | { view: 'edit'; ownerId: string }
   | { view: 'delete-confirm'; ownerId: string; ownerName: string }
   | { view: 'delete-action'; ownerId: string; ownerName: string; linkedAssets: Asset[] };
@@ -42,6 +44,11 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   const [editValues, setEditValues] = useState({ name: '', email: '', department: '' });
   const [editFocus, setEditFocus] = useState(0);
   const [editError, setEditError] = useState<string | null>(null);
+
+  // Add form state
+  const [addValues, setAddValues] = useState({ name: '', email: '', department: '' });
+  const [addFocus, setAddFocus] = useState(0);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const reload = () => {
     try {
@@ -85,6 +92,14 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
     if (key.upArrow || input === 'k') { setSelectedIndex((i) => Math.max(0, i - 1)); return; }
     if (key.downArrow || input === 'j') { setSelectedIndex((i) => Math.min(filtered.length - 1, i + 1)); return; }
 
+    if (input === 'n') {
+      setAddValues({ name: '', email: '', department: '' });
+      setAddFocus(0);
+      setAddError(null);
+      setState({ view: 'add-form' });
+      return;
+    }
+
     if (input === 'e' && filtered.length > 0) {
       const owner = filtered[clampedIndex];
       setEditValues({
@@ -109,6 +124,39 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       }
     }
   });
+
+  // ── Add form navigation ───────────────────────────────────────────────────────
+
+  useInput((input, key) => {
+    if (state.view !== 'add-form') return;
+
+    if (key.escape) {
+      setState({ view: 'list' });
+      setAddError(null);
+      return;
+    }
+    if ((key.tab && !key.shift) || key.downArrow) { setAddFocus((i) => Math.min(i + 1, 3)); return; }
+    if ((key.tab && key.shift) || key.upArrow) { setAddFocus((i) => Math.max(i - 1, 0)); return; }
+    if (key.return) {
+      if (addFocus === 3) {
+        handleAddSubmit();
+      } else {
+        setAddFocus((i) => Math.min(i + 1, 3));
+      }
+    }
+  });
+
+  function handleAddSubmit() {
+    if (!addValues.name.trim()) { setAddError('Le nom est requis.'); return; }
+    insertOwner(getDb(), {
+      name: addValues.name.trim(),
+      email: addValues.email.trim() || null,
+      department: addValues.department.trim() || null,
+    });
+    setMessage(`Owner "${addValues.name.trim()}" créé.`);
+    setState({ view: 'list' });
+    reload();
+  }
 
   // ── Edit form navigation ──────────────────────────────────────────────────────
 
@@ -194,11 +242,46 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
     reload();
   };
 
-  // ── Render: edit view ────────────────────────────────────────────────────────
+  // ── Render: add-form view ────────────────────────────────────────────────────
 
   const labelWidth = 16;
 
+  if (state.view === 'add-form') {
+    return (
+      <Box flexDirection="column" paddingX={1}>
+        <Text bold color="green">Nouveau propriétaire</Text>
+        {addError && <Text color="red">⚠ {addError}</Text>}
+        <Box marginTop={1} flexDirection="column">
+          <Box>
+            <Text color={addFocus === 0 ? 'cyan' : 'white'}>{'* Nom:'.padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.name} onChange={(v) => { setAddValues((p) => ({ ...p, name: v })); setAddError(null); }} focus={addFocus === 0} placeholder="requis…" />
+          </Box>
+          <Box>
+            <Text color={addFocus === 1 ? 'cyan' : 'white'}>{'  Email:'.padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.email} onChange={(v) => setAddValues((p) => ({ ...p, email: v }))} focus={addFocus === 1} placeholder="optionnel…" />
+          </Box>
+          <Box>
+            <Text color={addFocus === 2 ? 'cyan' : 'white'}>{'  Département:'.padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.department} onChange={(v) => setAddValues((p) => ({ ...p, department: v }))} focus={addFocus === 2} placeholder="optionnel…" />
+          </Box>
+          <Box marginTop={1}>
+            <Text color={addFocus === 3 ? 'black' : 'white'} backgroundColor={addFocus === 3 ? 'cyan' : undefined} bold={addFocus === 3}>
+              {' [Créer] '}
+            </Text>
+            <Text color="gray">    Esc: Annuler</Text>
+          </Box>
+        </Box>
+        <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+          <Text color="gray">Tab/↓ suivant · Shift+Tab/↑ précédent · Enter valider · Esc annuler</Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── Render: edit view ────────────────────────────────────────────────────────
+
   if (state.view === 'edit') {
+
     const owner = getOwnerById(getDb(), state.ownerId);
     return (
       <Box flexDirection="column" paddingX={1}>
@@ -326,7 +409,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         );
       })}
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-        <Text color="gray">↑↓/jk naviguer · e éditer · d supprimer · Tab filtre · Esc retour</Text>
+        <Text color="gray">↑↓/jk naviguer · n nouveau · e éditer · d supprimer · Tab filtre · Esc retour</Text>
       </Box>
     </Box>
   );

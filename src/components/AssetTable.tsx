@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import TextInput from 'ink-text-input';
-import { listAssets } from '../db/queries/assets.js';
+import { listAssets, deleteAsset } from '../db/queries/assets.js';
 import { getDb } from '../context.js';
 import { formatDate } from '../utils/date.js';
 import { StatusBadge } from './shared/StatusBadge.js';
@@ -20,16 +20,18 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
   const [filter, setFilter] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [filterFocused, setFilterFocused] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
-  // Chargement initial
-  useEffect(() => {
+  const reload = () => {
     try {
-      const rows = listAssets(getDb());
-      setAssets(rows);
+      setAssets(listAssets(getDb()));
     } catch {
       setAssets([]);
     }
-  }, []);
+  };
+
+  // Chargement initial
+  useEffect(() => { reload(); }, []);
 
   // Filtrage en temps réel sur name et owner
   const filtered = assets.filter((a) => {
@@ -48,6 +50,22 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
 
   useInput(
     (input, key) => {
+      // Confirmation de suppression en cours
+      if (deleteConfirm !== null) {
+        if (input === 'o') {
+          try {
+            deleteAsset(getDb(), deleteConfirm.id);
+          } catch {
+            // ignore
+          }
+          setDeleteConfirm(null);
+          reload();
+        } else if (input === 'n' || key.escape) {
+          setDeleteConfirm(null);
+        }
+        return;
+      }
+
       // Tab : bascule le focus filtre/liste
       if (key.tab) {
         setFilterFocused((prev) => !prev);
@@ -73,7 +91,12 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         onNavigate('form', undefined, 'add');
         return;
       }
-      if (input === 'd') {
+      if (input === 'd' && filtered.length > 0) {
+        const asset = filtered[clampedIndex];
+        setDeleteConfirm({ id: asset.id, name: asset.name });
+        return;
+      }
+      if (input === 'D') {
         onNavigate('dashboard');
         return;
       }
@@ -168,10 +191,18 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         );
       })}
 
+      {/* Confirmation suppression */}
+      {deleteConfirm && (
+        <Box marginTop={1}>
+          <Text color="yellow">Supprimer "{deleteConfirm.name}" ? </Text>
+          <Text color="white">(o/n)</Text>
+        </Box>
+      )}
+
       {/* Aide clavier */}
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
         <Text color="gray">
-          ↑↓/jk naviguer · Enter détail · n nouveau · d dashboard · o owners · Tab filtre · q quitter
+          ↑↓/jk naviguer · Enter détail · n nouveau · d supprimer · D dashboard · o owners · Tab filtre · q quitter
         </Text>
       </Box>
     </Box>

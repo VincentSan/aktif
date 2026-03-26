@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { getDb, getConfig } from '../context.js';
-import { getAssetById, retireAsset } from '../db/queries/assets.js';
+import { getAssetById, retireAsset, deleteAsset } from '../db/queries/assets.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { resolveUser } from '../utils/user.js';
 import { StatusBadge } from './shared/StatusBadge.js';
@@ -22,6 +22,7 @@ interface FieldRow {
 export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.ReactElement {
   const [asset, setAsset] = useState<Asset | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -34,6 +35,23 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
   }, [assetId]);
 
   useInput((input, key) => {
+    // Confirmation de suppression en cours
+    if (deleteConfirm) {
+      if (input === 'o') {
+        try {
+          deleteAsset(getDb(), assetId);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : String(e));
+          setDeleteConfirm(false);
+          return;
+        }
+        onNavigate('list');
+      } else if (input === 'n' || key.escape) {
+        setDeleteConfirm(false);
+      }
+      return;
+    }
+
     if (key.escape) {
       onNavigate('list');
     } else if (input === 'e') {
@@ -55,6 +73,8 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
+    } else if (input === 'd') {
+      setDeleteConfirm(true);
     } else if (input === 'h') {
       onNavigate('history', assetId);
     }
@@ -130,8 +150,15 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
         </Box>
       </Box>
 
+      {deleteConfirm && (
+        <Box marginTop={1}>
+          <Text color="yellow">Supprimer "{asset.name}" ? </Text>
+          <Text color="white">(o/n)</Text>
+        </Box>
+      )}
+
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-        <Text color="gray">e modifier  ·  r retirer  ·  h historique  ·  Esc retour</Text>
+        <Text color="gray">e modifier  ·  r retirer  ·  d supprimer  ·  h historique  ·  Esc retour</Text>
       </Box>
     </Box>
   );
