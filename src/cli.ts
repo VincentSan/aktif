@@ -63,6 +63,7 @@ program
   .command('tui')
   .description("Lancer l'interface interactive (TUI)")
   .action(async () => {
+    process.stdout.write('\x1b[3J\x1b[2J\x1b[H');
     const { render } = await import('ink');
     const React = await import('react');
     const { App } = await import('./components/App.js');
