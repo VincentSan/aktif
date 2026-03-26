@@ -10,4 +10,5 @@ const config = resolveConfig();
 const { db, sqlite } = createConnection(config.db);
 runMigrations(sqlite);
 setContext(db, config);
+process.stdout.write('\x1b[3J\x1b[2J\x1b[H');
 render(React.createElement(App, null));
