@@ -35,11 +35,18 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
   }, [assetId]);
 
   useInput((input, key) => {
-    // Confirmation de suppression en cours
     if (deleteConfirm) {
       if (input === 'o') {
         try {
-          deleteAsset(getDb(), assetId);
+          const db = getDb();
+          const config = getConfig();
+          appendAuditLog(db, {
+            asset_id: assetId,
+            action: 'delete',
+            changed_by: resolveUser(config),
+            diff: {},
+          });
+          deleteAsset(db, assetId);
         } catch (e) {
           setError(e instanceof Error ? e.message : String(e));
           setDeleteConfirm(false);

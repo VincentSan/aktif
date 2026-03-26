@@ -40,10 +40,14 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   const [filter, setFilter] = useState('');
   const [filterFocused, setFilterFocused] = useState(false);
 
+  // Index du bouton Save dans les formulaires owner (nom=0, email=1, département=2, save=3)
+  const FORM_SAVE_IDX = 3;
+
   // Edit form state
   const [editValues, setEditValues] = useState({ name: '', email: '', department: '' });
   const [editFocus, setEditFocus] = useState(0);
   const [editError, setEditError] = useState<string | null>(null);
+  const [editOwnerId, setEditOwnerId] = useState<string | null>(null);
 
   // Add form state
   const [addValues, setAddValues] = useState({ name: '', email: '', department: '' });
@@ -109,6 +113,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       });
       setEditFocus(0);
       setEditError(null);
+      setEditOwnerId(owner.id);
       setState({ view: 'edit', ownerId: owner.id });
       return;
     }
@@ -135,13 +140,13 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       setAddError(null);
       return;
     }
-    if ((key.tab && !key.shift) || key.downArrow) { setAddFocus((i) => Math.min(i + 1, 3)); return; }
+    if ((key.tab && !key.shift) || key.downArrow) { setAddFocus((i) => Math.min(i + 1, FORM_SAVE_IDX)); return; }
     if ((key.tab && key.shift) || key.upArrow) { setAddFocus((i) => Math.max(i - 1, 0)); return; }
     if (key.return) {
-      if (addFocus === 3) {
+      if (addFocus === FORM_SAVE_IDX) {
         handleAddSubmit();
       } else {
-        setAddFocus((i) => Math.min(i + 1, 3));
+        setAddFocus((i) => Math.min(i + 1, FORM_SAVE_IDX));
       }
     }
   });
@@ -168,13 +173,13 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       setEditError(null);
       return;
     }
-    if ((key.tab && !key.shift) || key.downArrow) { setEditFocus((i) => Math.min(i + 1, 3)); return; }
+    if ((key.tab && !key.shift) || key.downArrow) { setEditFocus((i) => Math.min(i + 1, FORM_SAVE_IDX)); return; }
     if ((key.tab && key.shift) || key.upArrow) { setEditFocus((i) => Math.max(i - 1, 0)); return; }
     if (key.return) {
-      if (editFocus === 3) {
+      if (editFocus === FORM_SAVE_IDX) {
         handleEditSubmit();
       } else {
-        setEditFocus((i) => Math.min(i + 1, 3));
+        setEditFocus((i) => Math.min(i + 1, FORM_SAVE_IDX));
       }
     }
   });
@@ -281,12 +286,10 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   // ── Render: edit view ────────────────────────────────────────────────────────
 
   if (state.view === 'edit') {
-
-    const owner = getOwnerById(getDb(), state.ownerId);
     return (
       <Box flexDirection="column" paddingX={1}>
         <Text bold color="blue">Modifier le propriétaire</Text>
-        {owner && <Text color="gray">ID : {owner.id}</Text>}
+        {editOwnerId && <Text color="gray">ID : {editOwnerId}</Text>}
         {editError && <Text color="red">⚠ {editError}</Text>}
         <Box marginTop={1} flexDirection="column">
           <Box>

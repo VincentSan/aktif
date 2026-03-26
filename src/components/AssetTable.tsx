@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useApp } from 'ink';
 import TextInput from 'ink-text-input';
 import { listAssets, deleteAsset } from '../db/queries/assets.js';
-import { getDb } from '../context.js';
+import { appendAuditLog } from '../db/queries/audit-log.js';
+import { getDb, getConfig } from '../context.js';
+import { resolveUser } from '../utils/user.js';
 import { formatDate } from '../utils/date.js';
 import { StatusBadge } from './shared/StatusBadge.js';
 import { ClassificationBadge } from './shared/ClassificationBadge.js';
@@ -21,6 +23,7 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [filterFocused, setFilterFocused] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const reload = () => {
     try {
@@ -50,13 +53,22 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
 
   useInput(
     (input, key) => {
-      // Confirmation de suppression en cours
       if (deleteConfirm !== null) {
         if (input === 'o') {
           try {
-            deleteAsset(getDb(), deleteConfirm.id);
-          } catch {
-            // ignore
+            const db = getDb();
+            const config = getConfig();
+            appendAuditLog(db, {
+              asset_id: deleteConfirm.id,
+              action: 'delete',
+              changed_by: resolveUser(config),
+              diff: {},
+            });
+            deleteAsset(db, deleteConfirm.id);
+          } catch (e) {
+            setDeleteError(e instanceof Error ? e.message : String(e));
+            setDeleteConfirm(null);
+            return;
           }
           setDeleteConfirm(null);
           reload();
@@ -191,7 +203,11 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         );
       })}
 
-      {/* Confirmation suppression */}
+      {deleteError && (
+        <Box marginTop={1}>
+          <Text color="red">Erreur suppression : {deleteError}</Text>
+        </Box>
+      )}
       {deleteConfirm && (
         <Box marginTop={1}>
           <Text color="yellow">Supprimer "{deleteConfirm.name}" ? </Text>
