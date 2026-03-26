@@ -58,3 +58,17 @@ export function clearOwnerOnAssets(db: Db, ownerId: string): void {
 export function deleteAssetsByOwnerId(db: Db, ownerId: string): void {
   db.delete(assets).where(eq(assets.owner_id, ownerId)).run();
 }
+
+export function updateOwner(db: Db, id: string, data: Partial<Omit<Owner, 'id' | 'created_at'>>): Owner | null {
+  const rows = db
+    .update(owners)
+    .set({
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.email !== undefined ? { email: data.email } : {}),
+      ...(data.department !== undefined ? { department: data.department } : {}),
+    })
+    .where(eq(owners.id, id))
+    .returning()
+    .all();
+  return rows.length > 0 ? (rows[0] as Owner) : null;
+}
