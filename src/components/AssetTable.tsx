@@ -84,8 +84,16 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         return;
       }
 
-      // Quand le filtre a le focus, on ne gère pas les raccourcis de liste
-      if (filterFocused) return;
+      // Quand le filtre a le focus : seuls Escape et Enter sont actifs
+      if (filterFocused) {
+        if (key.escape) {
+          setFilter('');
+          setFilterFocused(false);
+        } else if (key.return) {
+          setFilterFocused(false);
+        }
+        return;
+      }
 
       if (key.upArrow || input === 'k') {
         setSelectedIndex((i) => Math.max(0, i - 1));

@@ -22,6 +22,7 @@ import { registerAssetConfig } from './commands/asset-config.js';
 import { registerOwnerAdd } from './commands/owner-add.js';
 import { registerOwnerList } from './commands/owner-list.js';
 import { registerOwnerDelete } from './commands/owner-delete.js';
+import { registerOwnerEdit } from './commands/owner-edit.js';
 import { registerConfigEdit } from './commands/config-edit.js';
 
 export const program = new Command();
@@ -74,6 +75,7 @@ const owner = program.command('owner').description('Gestion des propriétaires')
 registerOwnerAdd(owner);
 registerOwnerList(owner);
 registerOwnerDelete(owner);
+registerOwnerEdit(owner);
 export { owner };
 
 const config = program.command('config').description('Configuration de aktif');

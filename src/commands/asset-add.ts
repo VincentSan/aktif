@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import { getDb, getConfig } from '../cli.js';
 import { insertAsset } from '../db/queries/assets.js';
+import { resolveOwnerCli } from '../db/queries/owners.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { ASSET_TYPES, ASSET_STATUSES, CLASSIFICATIONS } from '../types/asset.js';
 import { addDays, today } from '../utils/date.js';
@@ -71,6 +72,10 @@ export function registerAssetAdd(asset: Command): void {
       const config = getConfig();
       const db = getDb();
 
+      const { name: ownerName, id: ownerId } = opts.owner
+        ? resolveOwnerCli(db, opts.owner)
+        : { name: null, id: null };
+
       // Calculer next_review_date si non fourni
       const entryDate = opts.entryDate ?? today();
       const nextReviewDate = opts.nextReviewDate ?? addDays(entryDate, config.defaultReviewPeriodDays);
@@ -80,8 +85,8 @@ export function registerAssetAdd(asset: Command): void {
         type: opts.type,
         description: opts.description ?? null,
         location: opts.location ?? null,
-        owner: opts.owner ?? null,
-        owner_id: null,
+        owner: ownerName,
+        owner_id: ownerId,
         classification: opts.classification ?? null,
         access_restrictions: opts.accessRestrictions ?? null,
         status: opts.status ?? 'actif',

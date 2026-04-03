@@ -5,7 +5,6 @@ import { getDb } from '../context.js';
 import {
   listOwners,
   deleteOwner,
-  getOwnerById,
   getAssetsByOwnerId,
   reassignAssets,
   clearOwnerOnAssets,
@@ -23,7 +22,8 @@ type OwnerManagerView =
   | { view: 'add-form' }
   | { view: 'edit'; ownerId: string }
   | { view: 'delete-confirm'; ownerId: string; ownerName: string }
-  | { view: 'delete-action'; ownerId: string; ownerName: string; linkedAssets: Asset[] };
+  | { view: 'delete-action'; ownerId: string; ownerName: string; linkedAssets: Asset[] }
+  | { view: 'reassign-select'; ownerId: string; ownerName: string; linkedAssets: Asset[]; candidates: Owner[]; selectedIndex: number };
 
 interface OwnerManagerProps {
   onNavigate: NavigateFunction;
@@ -33,7 +33,6 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   const [owners, setOwners] = useState<Owner[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [state, setState] = useState<OwnerManagerView>({ view: 'list' });
-  const [reassignInputValue, setReassignInputValue] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   // Filter state
@@ -83,7 +82,6 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
 
   useInput((input, key) => {
     if (state.view !== 'list') return;
-    if (reassignInputValue !== null) return;
 
     if (key.tab) {
       setFilterFocused((prev) => !prev);
@@ -198,7 +196,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
     reload();
   }
 
-  // ── Delete confirm / action navigation ───────────────────────────────────────
+  // ── Delete confirm / action / reassign-select navigation ─────────────────────
 
   useInput((input, key) => {
     if (state.view === 'delete-confirm') {
@@ -210,7 +208,6 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         reload();
       }
     } else if (state.view === 'delete-action') {
-      if (reassignInputValue !== null) return;
       if (key.escape || input === 'q') { setState({ view: 'list' }); setMessage(null); return; }
       const db = getDb();
       if (input === '1') {
@@ -220,7 +217,8 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         setState({ view: 'list' });
         reload();
       } else if (input === '2') {
-        setReassignInputValue('');
+        const candidates = owners.filter((o) => o.id !== state.ownerId);
+        setState({ view: 'reassign-select', ownerId: state.ownerId, ownerName: state.ownerName, linkedAssets: state.linkedAssets, candidates, selectedIndex: 0 });
       } else if (input === '3') {
         clearOwnerOnAssets(db, state.ownerId);
         deleteOwner(db, state.ownerId);
@@ -228,24 +226,26 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         setState({ view: 'list' });
         reload();
       }
+    } else if (state.view === 'reassign-select') {
+      if (key.escape || input === 'q') {
+        setState({ view: 'delete-action', ownerId: state.ownerId, ownerName: state.ownerName, linkedAssets: state.linkedAssets });
+        return;
+      }
+      if (key.upArrow || input === 'k') { setState((s) => s.view === 'reassign-select' ? { ...s, selectedIndex: Math.max(0, s.selectedIndex - 1) } : s); return; }
+      if (key.downArrow || input === 'j') { setState((s) => s.view === 'reassign-select' ? { ...s, selectedIndex: Math.min(s.candidates.length - 1, s.selectedIndex + 1) } : s); return; }
+      if (key.return) {
+        if (state.candidates.length === 0) return;
+        const newOwner = state.candidates[state.selectedIndex];
+        if (!newOwner) return;
+        const db = getDb();
+        reassignAssets(db, state.ownerId, newOwner.id);
+        deleteOwner(db, state.ownerId);
+        setMessage(`${state.linkedAssets.length} actif(s) réassigné(s) à "${newOwner.name}". Owner "${state.ownerName}" supprimé.`);
+        setState({ view: 'list' });
+        reload();
+      }
     }
   });
-
-  const handleReassignSubmit = (value: string) => {
-    if (state.view !== 'delete-action') return;
-    setReassignInputValue(null);
-    const db = getDb();
-    const newOwner = getOwnerById(db, value.trim());
-    if (!newOwner) {
-      setMessage(`Erreur: owner "${value.trim()}" introuvable.`);
-      return;
-    }
-    reassignAssets(db, state.ownerId, value.trim());
-    deleteOwner(db, state.ownerId);
-    setMessage(`${state.linkedAssets.length} actif(s) réassigné(s) à "${newOwner.name}". Owner "${state.ownerName}" supprimé.`);
-    setState({ view: 'list' });
-    reload();
-  };
 
   // ── Render: add-form view ────────────────────────────────────────────────────
 
@@ -342,17 +342,40 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         <Text>  [2] Réassigner à un autre owner</Text>
         <Text>  [3] Mettre owner à null sur les actifs</Text>
         <Text color="gray">  [q/Esc] Annuler</Text>
-        {reassignInputValue !== null && (
-          <Box marginTop={1}>
-            <Text>ID du nouvel owner : </Text>
-            <TextInput
-              value={reassignInputValue}
-              onChange={setReassignInputValue}
-              onSubmit={handleReassignSubmit}
-              focus
-            />
-          </Box>
+      </Box>
+    );
+  }
+
+  // ── Render: reassign-select ──────────────────────────────────────────────────
+
+  if (state.view === 'reassign-select') {
+    return (
+      <Box flexDirection="column" paddingX={1}>
+        <Text bold color="yellow">
+          Réassigner les actifs de "{state.ownerName}" vers :
+        </Text>
+        {state.candidates.length === 0 && (
+          <Text color="red">Aucun autre owner disponible. Ajoutez-en un d'abord.</Text>
         )}
+        {state.candidates.map((candidate, index) => {
+          const isSelected = index === state.selectedIndex;
+          const prefix = isSelected ? '> ' : '  ';
+          return (
+            <Box key={candidate.id}>
+              <Text bold={isSelected} inverse={isSelected}>
+                {prefix}
+                {col(candidate.name, 24)}
+                {'  '}
+                {col(candidate.email, 28)}
+                {'  '}
+                {col(candidate.department, 20)}
+              </Text>
+            </Box>
+          );
+        })}
+        <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+          <Text color="gray">↑↓/jk naviguer · Enter confirmer · q/Esc retour</Text>
+        </Box>
       </Box>
     );
   }

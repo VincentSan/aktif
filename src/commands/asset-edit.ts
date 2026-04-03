@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import { getDb, getConfig } from '../cli.js';
 import { updateAsset } from '../db/queries/assets.js';
+import { resolveOwnerCli } from '../db/queries/owners.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
@@ -39,18 +40,24 @@ export function registerAssetEdit(asset: Command): void {
         process.exit(1);
       }
 
+      const config = getConfig();
+      const db = getDb();
+
       const changes: Record<string, unknown> = {};
       if (opts.name !== undefined) changes.name = opts.name;
       if (opts.type !== undefined) changes.type = opts.type;
       if (opts.description !== undefined) changes.description = opts.description;
       if (opts.location !== undefined) changes.location = opts.location;
-      if (opts.owner !== undefined) changes.owner = opts.owner;
+      if (opts.owner !== undefined) {
+        const resolved = resolveOwnerCli(db, opts.owner);
+        changes.owner = resolved.name;
+        changes.owner_id = resolved.id;
+      }
       if (opts.classification !== undefined) changes.classification = opts.classification;
       if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
       if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
 
-      const config = getConfig();
       if (opts.nextReviewDate === undefined) {
         changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
       } else {
@@ -58,14 +65,6 @@ export function registerAssetEdit(asset: Command): void {
       }
 
       if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
-      if (opts.tags !== undefined) {
-      }
-      if (opts.components !== undefined) {
-      }
-      if (opts.relatedRisks !== undefined) {
-      }
-
-      const db = getDb();
 
       try {
         const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2]);
