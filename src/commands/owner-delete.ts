@@ -9,6 +9,7 @@ import {
   clearOwnerOnAssets,
   deleteAssetsByOwnerId,
 } from '../db/queries/owners.js';
+import { t } from '../i18n.js';
 
 function ask(rl: readline.Interface, question: string): Promise<string> {
   return new Promise((resolve) => rl.question(question, resolve));
@@ -26,7 +27,7 @@ export function registerOwnerDelete(parent: Command): void {
 
       const owner = getOwnerById(db, id);
       if (!owner) {
-        process.stderr.write(`Erreur: owner "${id}" introuvable\n`);
+        process.stderr.write(`${t('err_owner_not_found')}${id}${t('err_owner_not_found_end')}\n`);
         process.exit(1);
       }
 
@@ -36,48 +37,42 @@ export function registerOwnerDelete(parent: Command): void {
         if (opts.reassign) {
           const targetOwner = getOwnerById(db, opts.reassign);
           if (!targetOwner) {
-            process.stderr.write(`Erreur: owner de destination "${opts.reassign}" introuvable\n`);
+            process.stderr.write(`${t('err_owner_dest_not_found')}${opts.reassign}${t('err_owner_not_found_end')}\n`);
             process.exit(1);
           }
           reassignAssets(db, id, opts.reassign);
-          process.stdout.write(`${linkedAssets.length} actif(s) réassigné(s) à "${targetOwner.name}".\n`);
+          process.stdout.write(`${linkedAssets.length}${t('owner_assets_reassigned')}${targetOwner.name}${t('owner_assets_reassigned_end')}\n`);
         } else if (opts.clear) {
           clearOwnerOnAssets(db, id);
-          process.stdout.write(`${linkedAssets.length} actif(s) mis à jour (owner = null).\n`);
+          process.stdout.write(`${linkedAssets.length}${t('owner_assets_cleared')}\n`);
         } else if (opts.force) {
           deleteAssetsByOwnerId(db, id);
-          process.stdout.write(`${linkedAssets.length} actif(s) supprimé(s).\n`);
+          process.stdout.write(`${linkedAssets.length}${t('owner_assets_deleted')}\n`);
         } else {
           const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
           try {
             const answer = await ask(
               rl,
-              `L'owner "${owner.name}" a ${linkedAssets.length} actif(s) lié(s).\n` +
-              `Choisissez une action :\n` +
-              `  [1] Supprimer tous les actifs liés\n` +
-              `  [2] Réassigner à un autre owner\n` +
-              `  [3] Mettre owner à null sur les actifs\n` +
-              `  [q] Annuler\n` +
-              `> `,
+              `${t('owner_delete_menu')}${owner.name}${t('owner_delete_menu_mid')}${linkedAssets.length}${t('owner_delete_menu_linked')}`,
             );
 
             if (answer.trim() === '1') {
               deleteAssetsByOwnerId(db, id);
-              process.stdout.write(`${linkedAssets.length} actif(s) supprimé(s).\n`);
+              process.stdout.write(`${linkedAssets.length}${t('owner_assets_deleted')}\n`);
             } else if (answer.trim() === '2') {
-              const newOwnerId = await ask(rl, 'ID du nouvel owner : ');
+              const newOwnerId = await ask(rl, t('owner_reassign_prompt'));
               const targetOwner = getOwnerById(db, newOwnerId.trim());
               if (!targetOwner) {
-                process.stderr.write(`Erreur: owner "${newOwnerId.trim()}" introuvable\n`);
+                process.stderr.write(`${t('err_owner_not_found')}${newOwnerId.trim()}${t('err_owner_not_found_end')}\n`);
                 process.exit(1);
               }
               reassignAssets(db, id, newOwnerId.trim());
-              process.stdout.write(`${linkedAssets.length} actif(s) réassigné(s) à "${targetOwner.name}".\n`);
+              process.stdout.write(`${linkedAssets.length}${t('owner_assets_reassigned')}${targetOwner.name}${t('owner_assets_reassigned_end')}\n`);
             } else if (answer.trim() === '3') {
               clearOwnerOnAssets(db, id);
-              process.stdout.write(`${linkedAssets.length} actif(s) mis à jour (owner = null).\n`);
+              process.stdout.write(`${linkedAssets.length}${t('owner_assets_cleared')}\n`);
             } else {
-              process.stdout.write('Annulé.\n');
+              process.stdout.write(`${t('owner_delete_cancelled')}\n`);
               process.exit(0);
             }
           } finally {
@@ -87,6 +82,6 @@ export function registerOwnerDelete(parent: Command): void {
       }
 
       deleteOwner(db, id);
-      process.stdout.write(`Owner "${owner.name}" supprimé.\n`);
+      process.stdout.write(`${t('owner_deleted')}${owner.name}${t('owner_deleted_end')}\n`);
     });
 }

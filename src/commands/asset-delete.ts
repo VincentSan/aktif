@@ -4,6 +4,7 @@ import { getDb, getConfig } from '../cli.js';
 import { getAssetById, deleteAsset } from '../db/queries/assets.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { resolveUser } from '../utils/user.js';
+import { t } from '../i18n.js';
 
 export function registerAssetDelete(asset: Command): void {
   asset
@@ -16,14 +17,14 @@ export function registerAssetDelete(asset: Command): void {
 
       const found = getAssetById(db, id);
       if (!found) {
-        process.stderr.write(`Erreur: actif introuvable (id: ${id})\n`);
+        process.stderr.write(`${t('err_asset_not_found')}${id}${t('err_asset_not_found_end')}\n`);
         process.exit(1);
       }
 
       if (!opts.yes) {
-        const confirmed = await confirm(`Supprimer l'actif "${found.name}" (${id}) ? [y/N] `);
+        const confirmed = await confirm(`${t('delete_confirm_prompt')}${found.name}" (${id})${t('delete_confirm_prompt_end')}`);
         if (!confirmed) {
-          process.stdout.write('Suppression annulée.\n');
+          process.stdout.write(`${t('delete_cancelled')}\n`);
           return;
         }
       }
@@ -36,7 +37,7 @@ export function registerAssetDelete(asset: Command): void {
       });
 
       deleteAsset(db, id);
-      process.stdout.write(`Actif ${id} supprimé.\n`);
+      process.stdout.write(`${t('asset_deleted')}${id}${t('asset_deleted_end')}\n`);
     });
 }
 

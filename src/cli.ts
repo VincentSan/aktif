@@ -19,6 +19,7 @@ import { registerAssetExport } from './commands/asset-export.js';
 import { registerAssetImport } from './commands/asset-import.js';
 import { registerAssetReport } from './commands/asset-report.js';
 import { registerAssetConfig } from './commands/asset-config.js';
+import { registerAssetSearch } from './commands/asset-search.js';
 import { registerOwnerAdd } from './commands/owner-add.js';
 import { registerOwnerList } from './commands/owner-list.js';
 import { registerOwnerDelete } from './commands/owner-delete.js';
@@ -57,6 +58,7 @@ registerAssetExport(asset);
 registerAssetImport(asset);
 registerAssetReport(asset);
 registerAssetConfig(asset);
+registerAssetSearch(asset);
 
 export { asset };
 

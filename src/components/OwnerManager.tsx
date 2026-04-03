@@ -16,6 +16,7 @@ import type { Owner } from '../types/owner.js';
 import type { Asset } from '../types/asset.js';
 import { col } from './shared/col.js';
 import type { NavigateFunction } from './App.js';
+import { t } from '../i18n.js';
 
 type OwnerManagerView =
   | { view: 'list' }
@@ -150,13 +151,13 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   });
 
   function handleAddSubmit() {
-    if (!addValues.name.trim()) { setAddError('Le nom est requis.'); return; }
+    if (!addValues.name.trim()) { setAddError(t('tui_owner_err_name_req')); return; }
     insertOwner(getDb(), {
       name: addValues.name.trim(),
       email: addValues.email.trim() || null,
       department: addValues.department.trim() || null,
     });
-    setMessage(`Owner "${addValues.name.trim()}" créé.`);
+    setMessage(`${t('tui_owner_created')}${addValues.name.trim()}${t('tui_owner_created_end')}`);
     setState({ view: 'list' });
     reload();
   }
@@ -184,14 +185,14 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
 
   function handleEditSubmit() {
     if (state.view !== 'edit') return;
-    if (!editValues.name.trim()) { setEditError('Le nom est requis.'); return; }
+    if (!editValues.name.trim()) { setEditError(t('tui_owner_err_name_req')); return; }
     const updated = updateOwner(getDb(), state.ownerId, {
       name: editValues.name.trim(),
       email: editValues.email.trim() || null,
       department: editValues.department.trim() || null,
     });
-    if (!updated) { setEditError('Erreur lors de la mise à jour.'); return; }
-    setMessage(`Owner "${updated.name}" mis à jour.`);
+    if (!updated) { setEditError(t('tui_owner_err_update')); return; }
+    setMessage(`${t('tui_owner_updated_msg')}${updated.name}${t('tui_owner_updated_msg_end')}`);
     setState({ view: 'list' });
     reload();
   }
@@ -213,7 +214,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       if (input === '1') {
         deleteAssetsByOwnerId(db, state.ownerId);
         deleteOwner(db, state.ownerId);
-        setMessage(`${state.linkedAssets.length} actif(s) supprimé(s). Owner "${state.ownerName}" supprimé.`);
+        setMessage(`${state.linkedAssets.length}${t('tui_owner_delete_assets_msg')}${state.ownerName}${t('tui_owner_delete_assets_end')}`);
         setState({ view: 'list' });
         reload();
       } else if (input === '2') {
@@ -222,7 +223,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       } else if (input === '3') {
         clearOwnerOnAssets(db, state.ownerId);
         deleteOwner(db, state.ownerId);
-        setMessage(`${state.linkedAssets.length} actif(s) mis à jour (owner = null). Owner "${state.ownerName}" supprimé.`);
+        setMessage(`${state.linkedAssets.length}${t('tui_owner_cleared_msg')}${state.ownerName}${t('tui_owner_cleared_end')}`);
         setState({ view: 'list' });
         reload();
       }
@@ -240,7 +241,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         const db = getDb();
         reassignAssets(db, state.ownerId, newOwner.id);
         deleteOwner(db, state.ownerId);
-        setMessage(`${state.linkedAssets.length} actif(s) réassigné(s) à "${newOwner.name}". Owner "${state.ownerName}" supprimé.`);
+        setMessage(`${state.linkedAssets.length}${t('tui_owner_reassign_msg')}${newOwner.name}${t('tui_owner_reassign_msg_mid')}${state.ownerName}${t('tui_owner_reassign_msg_end')}`);
         setState({ view: 'list' });
         reload();
       }
@@ -254,30 +255,30 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   if (state.view === 'add-form') {
     return (
       <Box flexDirection="column" paddingX={1}>
-        <Text bold color="green">Nouveau propriétaire</Text>
+        <Text bold color="green">{t('tui_owner_add_title')}</Text>
         {addError && <Text color="red">⚠ {addError}</Text>}
         <Box marginTop={1} flexDirection="column">
           <Box>
-            <Text color={addFocus === 0 ? 'cyan' : 'white'}>{'* Nom:'.padEnd(labelWidth)}</Text>
-            <TextInput value={addValues.name} onChange={(v) => { setAddValues((p) => ({ ...p, name: v })); setAddError(null); }} focus={addFocus === 0} placeholder="requis…" />
+            <Text color={addFocus === 0 ? 'cyan' : 'white'}>{t('tui_owner_label_name').padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.name} onChange={(v) => { setAddValues((p) => ({ ...p, name: v })); setAddError(null); }} focus={addFocus === 0} placeholder={t('tui_owner_placeholder_req')} />
           </Box>
           <Box>
-            <Text color={addFocus === 1 ? 'cyan' : 'white'}>{'  Email:'.padEnd(labelWidth)}</Text>
-            <TextInput value={addValues.email} onChange={(v) => setAddValues((p) => ({ ...p, email: v }))} focus={addFocus === 1} placeholder="optionnel…" />
+            <Text color={addFocus === 1 ? 'cyan' : 'white'}>{t('tui_owner_label_email').padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.email} onChange={(v) => setAddValues((p) => ({ ...p, email: v }))} focus={addFocus === 1} placeholder={t('tui_owner_placeholder_opt')} />
           </Box>
           <Box>
-            <Text color={addFocus === 2 ? 'cyan' : 'white'}>{'  Département:'.padEnd(labelWidth)}</Text>
-            <TextInput value={addValues.department} onChange={(v) => setAddValues((p) => ({ ...p, department: v }))} focus={addFocus === 2} placeholder="optionnel…" />
+            <Text color={addFocus === 2 ? 'cyan' : 'white'}>{t('tui_owner_label_dept').padEnd(labelWidth)}</Text>
+            <TextInput value={addValues.department} onChange={(v) => setAddValues((p) => ({ ...p, department: v }))} focus={addFocus === 2} placeholder={t('tui_owner_placeholder_opt')} />
           </Box>
           <Box marginTop={1}>
             <Text color={addFocus === 3 ? 'black' : 'white'} backgroundColor={addFocus === 3 ? 'cyan' : undefined} bold={addFocus === 3}>
-              {' [Créer] '}
+              {t('tui_owner_btn_create')}
             </Text>
-            <Text color="gray">    Esc: Annuler</Text>
+            <Text color="gray">{t('tui_owner_cancel')}</Text>
           </Box>
         </Box>
         <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text color="gray">Tab/↓ suivant · Shift+Tab/↑ précédent · Enter valider · Esc annuler</Text>
+          <Text color="gray">{t('tui_owner_form_hint')}</Text>
         </Box>
       </Box>
     );
@@ -288,31 +289,31 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   if (state.view === 'edit') {
     return (
       <Box flexDirection="column" paddingX={1}>
-        <Text bold color="blue">Modifier le propriétaire</Text>
+        <Text bold color="blue">{t('tui_owner_edit_title')}</Text>
         {editOwnerId && <Text color="gray">ID : {editOwnerId}</Text>}
         {editError && <Text color="red">⚠ {editError}</Text>}
         <Box marginTop={1} flexDirection="column">
           <Box>
-            <Text color={editFocus === 0 ? 'cyan' : 'white'}>{'* Nom:'.padEnd(labelWidth)}</Text>
-            <TextInput value={editValues.name} onChange={(v) => { setEditValues((p) => ({ ...p, name: v })); setEditError(null); }} focus={editFocus === 0} placeholder="requis…" />
+            <Text color={editFocus === 0 ? 'cyan' : 'white'}>{t('tui_owner_label_name').padEnd(labelWidth)}</Text>
+            <TextInput value={editValues.name} onChange={(v) => { setEditValues((p) => ({ ...p, name: v })); setEditError(null); }} focus={editFocus === 0} placeholder={t('tui_owner_placeholder_req')} />
           </Box>
           <Box>
-            <Text color={editFocus === 1 ? 'cyan' : 'white'}>{'  Email:'.padEnd(labelWidth)}</Text>
-            <TextInput value={editValues.email} onChange={(v) => setEditValues((p) => ({ ...p, email: v }))} focus={editFocus === 1} placeholder="optionnel…" />
+            <Text color={editFocus === 1 ? 'cyan' : 'white'}>{t('tui_owner_label_email').padEnd(labelWidth)}</Text>
+            <TextInput value={editValues.email} onChange={(v) => setEditValues((p) => ({ ...p, email: v }))} focus={editFocus === 1} placeholder={t('tui_owner_placeholder_opt')} />
           </Box>
           <Box>
-            <Text color={editFocus === 2 ? 'cyan' : 'white'}>{'  Département:'.padEnd(labelWidth)}</Text>
-            <TextInput value={editValues.department} onChange={(v) => setEditValues((p) => ({ ...p, department: v }))} focus={editFocus === 2} placeholder="optionnel…" />
+            <Text color={editFocus === 2 ? 'cyan' : 'white'}>{t('tui_owner_label_dept').padEnd(labelWidth)}</Text>
+            <TextInput value={editValues.department} onChange={(v) => setEditValues((p) => ({ ...p, department: v }))} focus={editFocus === 2} placeholder={t('tui_owner_placeholder_opt')} />
           </Box>
           <Box marginTop={1}>
             <Text color={editFocus === 3 ? 'black' : 'white'} backgroundColor={editFocus === 3 ? 'cyan' : undefined} bold={editFocus === 3}>
-              {' [Sauvegarder] '}
+              {t('tui_owner_btn_save')}
             </Text>
-            <Text color="gray">    Esc: Annuler</Text>
+            <Text color="gray">{t('tui_owner_cancel')}</Text>
           </Box>
         </Box>
         <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text color="gray">Tab/↓ suivant · Shift+Tab/↑ précédent · Enter valider · Esc annuler</Text>
+          <Text color="gray">{t('tui_owner_form_hint')}</Text>
         </Box>
       </Box>
     );
@@ -323,8 +324,8 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
   if (state.view === 'delete-confirm') {
     return (
       <Box flexDirection="column" paddingX={1}>
-        <Text bold color="yellow">Supprimer l'owner "{state.ownerName}" ?</Text>
-        <Text color="gray">Aucun actif lié. Confirmer ? [o/n]</Text>
+        <Text bold color="yellow">{t('tui_owner_delete_confirm_title')}"{state.ownerName}"{t('tui_owner_delete_confirm_end')}</Text>
+        <Text color="gray">{t('tui_owner_delete_no_assets')}</Text>
       </Box>
     );
   }
@@ -335,13 +336,13 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
     return (
       <Box flexDirection="column" paddingX={1}>
         <Text bold color="yellow">
-          Owner "{state.ownerName}" — {state.linkedAssets.length} actif(s) lié(s)
+          Owner &quot;{state.ownerName}&quot; — {state.linkedAssets.length}{t('tui_owner_delete_action_suffix')}
         </Text>
-        <Text>Choisissez une action :</Text>
-        <Text>  [1] Supprimer tous les actifs liés</Text>
-        <Text>  [2] Réassigner à un autre owner</Text>
-        <Text>  [3] Mettre owner à null sur les actifs</Text>
-        <Text color="gray">  [q/Esc] Annuler</Text>
+        <Text>{t('tui_owner_delete_action_choose')}</Text>
+        <Text>{t('tui_owner_delete_action_1')}</Text>
+        <Text>{t('tui_owner_delete_action_2')}</Text>
+        <Text>{t('tui_owner_delete_action_3')}</Text>
+        <Text color="gray">{t('tui_owner_delete_action_q')}</Text>
       </Box>
     );
   }
@@ -352,10 +353,10 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
     return (
       <Box flexDirection="column" paddingX={1}>
         <Text bold color="yellow">
-          Réassigner les actifs de "{state.ownerName}" vers :
+          {t('tui_owner_reassign_title')}&quot;{state.ownerName}&quot;{t('tui_owner_reassign_to')}
         </Text>
         {state.candidates.length === 0 && (
-          <Text color="red">Aucun autre owner disponible. Ajoutez-en un d'abord.</Text>
+          <Text color="red">{t('tui_owner_reassign_none')}</Text>
         )}
         {state.candidates.map((candidate, index) => {
           const isSelected = index === state.selectedIndex;
@@ -374,7 +375,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
           );
         })}
         <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text color="gray">↑↓/jk naviguer · Enter confirmer · q/Esc retour</Text>
+          <Text color="gray">{t('tui_owner_reassign_hint')}</Text>
         </Box>
       </Box>
     );
@@ -384,20 +385,20 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
 
   return (
     <Box flexDirection="column" paddingX={1}>
-      <Text bold color="blue">Propriétaires</Text>
+      <Text bold color="blue">{t('tui_owners_title')}</Text>
 
       {/* Filter bar */}
       <Box marginTop={1} marginBottom={1}>
-        <Text color={filterFocused ? 'cyan' : 'white'}>Filtre: [</Text>
+        <Text color={filterFocused ? 'cyan' : 'white'}>{t('tui_filter_label')}</Text>
         <TextInput
           value={filter}
           onChange={setFilter}
           focus={filterFocused}
-          placeholder="nom, email ou département…"
+          placeholder={t('tui_owner_filter_placeholder')}
         />
         <Text color={filterFocused ? 'cyan' : 'white'}>]</Text>
         {!filterFocused && (
-          <Text color="gray">  Tab pour activer le filtre</Text>
+          <Text color="gray">{t('tui_filter_hint')}</Text>
         )}
       </Box>
 
@@ -406,16 +407,16 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
       <Box>
         <Text bold color="blue">
           {'  '}
-          {col('ID', 36)}
+          {col(t('tui_col_id'), 36)}
           {'  '}
-          {col('Nom', 20)}
+          {col(t('tui_col_name'), 20)}
           {'  '}
-          {col('Email', 24)}
+          {col(t('tui_col_email'), 24)}
           {'  '}
-          {'Département'}
+          {t('tui_col_dept')}
         </Text>
       </Box>
-      {filtered.length === 0 && <Text color="gray">Aucun propriétaire.</Text>}
+      {filtered.length === 0 && <Text color="gray">{t('tui_no_owner')}</Text>}
       {filtered.map((owner, index) => {
         const isSelected = index === clampedIndex && !filterFocused;
         const prefix = isSelected ? '> ' : '  ';
@@ -435,7 +436,7 @@ export function OwnerManager({ onNavigate }: OwnerManagerProps): React.ReactElem
         );
       })}
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-        <Text color="gray">↑↓/jk naviguer · n nouveau · e éditer · d supprimer · Tab filtre · Esc retour</Text>
+        <Text color="gray">{t('tui_owner_list_hint')}</Text>
       </Box>
     </Box>
   );

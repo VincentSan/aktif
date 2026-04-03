@@ -8,9 +8,11 @@ import { resolveUser } from '../utils/user.js';
 import { formatDate } from '../utils/date.js';
 import { StatusBadge } from './shared/StatusBadge.js';
 import { ClassificationBadge } from './shared/ClassificationBadge.js';
+import { TypeIcon } from './shared/TypeIcon.js';
 import { col } from './shared/col.js';
 import type { Asset } from '../types/asset.js';
 import type { NavigateFunction } from './App.js';
+import { t } from '../i18n.js';
 
 interface AssetTableProps {
   onNavigate: NavigateFunction;
@@ -135,16 +137,16 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
     <Box flexDirection="column" paddingX={1}>
       {/* Barre de filtre */}
       <Box marginBottom={1}>
-        <Text color={filterFocused ? 'cyan' : 'white'}>Filtre: [</Text>
+        <Text color={filterFocused ? 'cyan' : 'white'}>{t('tui_filter_label')}</Text>
         <TextInput
           value={filter}
           onChange={setFilter}
           focus={filterFocused}
-          placeholder="nom ou propriétaire…"
+          placeholder={t('tui_filter_placeholder')}
         />
         <Text color={filterFocused ? 'cyan' : 'white'}>]</Text>
         {!filterFocused && (
-          <Text color="gray">  Tab pour activer le filtre</Text>
+          <Text color="gray">{t('tui_filter_hint')}</Text>
         )}
       </Box>
 
@@ -153,17 +155,17 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         <Box width={2} flexShrink={0} />
         <Box width={8}  flexShrink={0}><Text bold color="blue">ID</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box width={20} flexShrink={0}><Text bold color="blue">Nom</Text></Box>
+        <Box width={20} flexShrink={0}><Text bold color="blue">{t('col_name')}</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box width={13} flexShrink={0}><Text bold color="blue">Type</Text></Box>
+        <Box width={13} flexShrink={0}><Text bold color="blue">{t('col_type')}</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box width={15} flexShrink={0}><Text bold color="blue">Classification</Text></Box>
+        <Box width={15} flexShrink={0}><Text bold color="blue">{t('col_classification')}</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box width={14} flexShrink={0}><Text bold color="blue">Propriétaire</Text></Box>
+        <Box width={14} flexShrink={0}><Text bold color="blue">{t('col_owner')}</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box width={14} flexShrink={0}><Text bold color="blue">Statut</Text></Box>
+        <Box width={14} flexShrink={0}><Text bold color="blue">{t('col_status')}</Text></Box>
         <Box width={2}  flexShrink={0} />
-        <Box flexShrink={0}><Text bold color="blue">Révision</Text></Box>
+        <Box flexShrink={0}><Text bold color="blue">{t('col_next_review')}</Text></Box>
       </Box>
       <Box>
         <Box width={2}  flexShrink={0} />
@@ -185,7 +187,7 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
       {/* Lignes */}
       {filtered.length === 0 && (
         <Box marginTop={1}>
-          <Text color="gray">Aucun asset trouvé.</Text>
+          <Text color="gray">{t('tui_no_asset')}</Text>
         </Box>
       )}
       {filtered.map((asset, index) => {
@@ -198,7 +200,10 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
             <Box width={2}  flexShrink={0} />
             <Box width={20} flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{col(asset.name, 20)}</Text></Box>
             <Box width={2}  flexShrink={0} />
-            <Box width={13} flexShrink={0}><Text bold={isSelected} inverse={isSelected}>{col(asset.type, 13)}</Text></Box>
+            <Box width={13} flexShrink={0}>
+              <TypeIcon type={asset.type} />
+              <Text bold={isSelected} inverse={isSelected}> {col(asset.type, 11)}</Text>
+            </Box>
             <Box width={2}  flexShrink={0} />
             <Box width={15} flexShrink={0}><ClassificationBadge classification={asset.classification} /></Box>
             <Box width={2}  flexShrink={0} />
@@ -213,20 +218,20 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
 
       {deleteError && (
         <Box marginTop={1}>
-          <Text color="red">Erreur suppression : {deleteError}</Text>
+          <Text color="red">{t('tui_delete_error')}{deleteError}</Text>
         </Box>
       )}
       {deleteConfirm && (
         <Box marginTop={1}>
-          <Text color="yellow">Supprimer "{deleteConfirm.name}" ? </Text>
-          <Text color="white">(o/n)</Text>
+          <Text color="yellow">{t('tui_delete_confirm')}{deleteConfirm.name}{t('tui_delete_confirm_end')}</Text>
+          <Text color="white">{t('tui_delete_confirm_keys')}</Text>
         </Box>
       )}
 
       {/* Aide clavier */}
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
         <Text color="gray">
-          ↑↓/jk naviguer · Enter détail · n nouveau · d supprimer · D dashboard · o owners · Tab filtre · q quitter
+          {t('tui_asset_table_hint')}
         </Text>
       </Box>
     </Box>

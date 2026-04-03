@@ -1,4 +1,4 @@
-import { eq, and, like, type SQL } from 'drizzle-orm';
+import { eq, and, like, or, type SQL } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { assets } from '../schema.js';
 import type { Db } from '../connection.js';
@@ -43,6 +43,23 @@ export function listAssets(db: Db, filters: AssetFilters = {}): Asset[] {
       ? db.select().from(assets).where(and(...conditions)).all()
       : db.select().from(assets).all();
 
+  return rows.map(rowToAsset);
+}
+
+export function searchAssets(db: Db, query: string): Asset[] {
+  const pattern = `%${query}%`;
+  const tagPattern = `%"${query}"%`;
+  const rows = db
+    .select()
+    .from(assets)
+    .where(
+      or(
+        like(assets.name, pattern),
+        like(assets.description, pattern),
+        like(assets.tags, tagPattern),
+      ) as SQL,
+    )
+    .all();
   return rows.map(rowToAsset);
 }
 

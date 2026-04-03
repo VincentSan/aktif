@@ -6,6 +6,7 @@ import { appendAuditLog } from '../db/queries/audit-log.js';
 import { ASSET_TYPES, ASSET_STATUSES, CLASSIFICATIONS } from '../types/asset.js';
 import { addDays, today } from '../utils/date.js';
 import { resolveUser } from '../utils/user.js';
+import { t } from '../i18n.js';
 
 export function registerAssetAdd(asset: Command): void {
   asset
@@ -30,21 +31,21 @@ export function registerAssetAdd(asset: Command): void {
       // Validation du type
       if (!ASSET_TYPES.includes(opts.type)) {
         process.stderr.write(
-          `Erreur: type invalide "${opts.type}". Valeurs acceptées: ${ASSET_TYPES.join(', ')}\n`,
+          `${t('err_type_invalid')}${opts.type}${t('err_type_invalid_end')}${ASSET_TYPES.join(', ')}\n`,
         );
         process.exit(1);
       }
       // Validation de la classification
       if (opts.classification && !CLASSIFICATIONS.includes(opts.classification)) {
         process.stderr.write(
-          `Erreur: classification invalide "${opts.classification}". Valeurs acceptées: ${CLASSIFICATIONS.join(', ')}\n`,
+          `${t('err_classification_invalid')}${opts.classification}${t('err_classification_invalid_end')}${CLASSIFICATIONS.join(', ')}\n`,
         );
         process.exit(1);
       }
       // Validation du statut
       if (opts.status && !ASSET_STATUSES.includes(opts.status)) {
         process.stderr.write(
-          `Erreur: statut invalide "${opts.status}". Valeurs acceptées: ${ASSET_STATUSES.join('|')}\n`,
+          `${t('err_status_invalid')}${opts.status}${t('err_status_invalid_end')}${ASSET_STATUSES.join('|')}\n`,
         );
         process.exit(1);
       }

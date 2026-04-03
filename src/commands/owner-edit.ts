@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import { getDb } from '../cli.js';
 import { updateOwner, resolveOwner } from '../db/queries/owners.js';
+import { t } from '../i18n.js';
 
 export function registerOwnerEdit(owner: Command): void {
   owner
@@ -11,7 +12,7 @@ export function registerOwnerEdit(owner: Command): void {
     .option('--department <d>', 'Nouveau département')
     .action((id, opts) => {
       if (!opts.name && !opts.email && !opts.department) {
-        process.stderr.write('Erreur: au moins une option requise (--name, --email, --department)\n');
+        process.stderr.write(`${t('err_owner_edit_required')}\n`);
         process.exit(1);
       }
 
@@ -22,12 +23,12 @@ export function registerOwnerEdit(owner: Command): void {
       try {
         const resolved = resolveOwner(db, id);
         if (!resolved) {
-          process.stderr.write(`Erreur: owner introuvable (id ou nom: ${id})\n`);
+          process.stderr.write(`${t('err_owner_id_not_found')}${id}${t('err_owner_id_not_found_end')}\n`);
           process.exit(1);
         }
         ownerId = resolved.id;
       } catch (err) {
-        process.stderr.write(`Erreur: ${(err as Error).message}\n`);
+        process.stderr.write(`${t('err_generic')}${(err as Error).message}\n`);
         process.exit(1);
       }
 
@@ -38,10 +39,10 @@ export function registerOwnerEdit(owner: Command): void {
 
       const updated = updateOwner(db, ownerId, changes);
       if (!updated) {
-        process.stderr.write(`Erreur: owner introuvable (id: ${ownerId})\n`);
+        process.stderr.write(`${t('err_owner_id_not_found')}${ownerId}${t('err_owner_id_not_found_end')}\n`);
         process.exit(1);
       }
 
-      process.stdout.write(`Owner ${updated.id} modifié.\n`);
+      process.stdout.write(`${t('owner_updated')}${updated.id}${t('owner_updated_end')}\n`);
     });
 }

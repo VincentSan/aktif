@@ -3,6 +3,7 @@ import { getDb, getConfig } from '../cli.js';
 import { retireAsset } from '../db/queries/assets.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { resolveUser } from '../utils/user.js';
+import { t } from '../i18n.js';
 
 export function registerAssetRetire(asset: Command): void {
   asset
@@ -19,9 +20,9 @@ export function registerAssetRetire(asset: Command): void {
           action: 'retire',
           changed_by: resolveUser(config),
         });
-        process.stdout.write(`Actif ${id} retiré (statut: ${after.status}).\n`);
+        process.stdout.write(`${t('asset_retired')}${id}${t('asset_retired_status')}${after.status}${t('asset_retired_end')}\n`);
       } catch (err) {
-        process.stderr.write(`Erreur: ${(err as Error).message}\n`);
+        process.stderr.write(`${t('err_generic')}${(err as Error).message}\n`);
         process.exit(1);
       }
     });

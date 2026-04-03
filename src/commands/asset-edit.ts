@@ -7,6 +7,7 @@ import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
 import { ASSET_TYPES, CLASSIFICATIONS, ASSET_STATUSES } from '../types/asset.js';
 import { addDays, today } from '../utils/date.js';
+import { t } from '../i18n.js';
 
 export function registerAssetEdit(asset: Command): void {
   asset
@@ -28,15 +29,15 @@ export function registerAssetEdit(asset: Command): void {
     .option('--related-risks <json>', 'Risques liés JSON')
     .action((id, opts) => {
       if (opts.type && !ASSET_TYPES.includes(opts.type)) {
-        process.stderr.write(`Erreur: type invalide "${opts.type}"\n`);
+        process.stderr.write(`${t('err_edit_type')}${opts.type}"\n`);
         process.exit(1);
       }
       if (opts.classification && !CLASSIFICATIONS.includes(opts.classification)) {
-        process.stderr.write(`Erreur: classification invalide "${opts.classification}"\n`);
+        process.stderr.write(`${t('err_edit_classification')}${opts.classification}"\n`);
         process.exit(1);
       }
       if (opts.status && !ASSET_STATUSES.includes(opts.status)) {
-        process.stderr.write(`Erreur: statut invalide "${opts.status}"\n`);
+        process.stderr.write(`${t('err_edit_status')}${opts.status}"\n`);
         process.exit(1);
       }
 
@@ -77,9 +78,9 @@ export function registerAssetEdit(asset: Command): void {
           diff,
         });
 
-        process.stdout.write(`Actif ${id} modifié.\n`);
+        process.stdout.write(`${t('asset_updated')}${id}${t('asset_updated_end')}\n`);
       } catch (err) {
-        process.stderr.write(`Erreur: ${(err as Error).message}\n`);
+        process.stderr.write(`${t('err_generic')}${(err as Error).message}\n`);
         process.exit(1);
       }
     });

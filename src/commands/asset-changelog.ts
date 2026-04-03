@@ -3,6 +3,7 @@ import { getDb } from '../cli.js';
 import { getChangelog } from '../db/queries/audit-log.js';
 import { formatTable, formatDiff } from '../utils/format.js';
 import { formatDate } from '../utils/date.js';
+import { t } from '../i18n.js';
 
 export function registerAssetChangelog(asset: Command): void {
   asset
@@ -18,7 +19,7 @@ export function registerAssetChangelog(asset: Command): void {
       });
 
       if (entries.length === 0) {
-        process.stdout.write('Aucune entrée dans le journal.\n');
+        process.stdout.write(`${t('no_changelog')}\n`);
         return;
       }
 
@@ -28,11 +29,11 @@ export function registerAssetChangelog(asset: Command): void {
           _diff_display: formatDiff(e.diff),
         })),
         [
-          { key: 'changed_at', label: 'Date', format: (v) => formatDate(v as string) },
+          { key: 'changed_at', label: t('col_date'), format: (v) => formatDate(v as string) },
           { key: 'asset_id', label: 'Asset ID', width: 12 },
-          { key: 'changed_by', label: 'Auteur' },
-          { key: 'action', label: 'Action' },
-          { key: '_diff_display', label: 'Modifications' },
+          { key: 'changed_by', label: t('col_author') },
+          { key: 'action', label: t('col_action') },
+          { key: '_diff_display', label: t('col_changes') },
         ]
       );
       process.stdout.write(output + '\n');

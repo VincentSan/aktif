@@ -6,8 +6,10 @@ import { appendAuditLog } from '../db/queries/audit-log.js';
 import { resolveUser } from '../utils/user.js';
 import { StatusBadge } from './shared/StatusBadge.js';
 import { ClassificationBadge } from './shared/ClassificationBadge.js';
+import { TypeIcon } from './shared/TypeIcon.js';
 import type { Asset } from '../types/asset.js';
 import type { NavigateFunction } from './App.js';
+import { t } from '../i18n.js';
 
 interface AssetDetailProps {
   assetId: string;
@@ -90,8 +92,8 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
   if (error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="red">Erreur : {error}</Text>
-        <Text color="gray">Esc retour</Text>
+        <Text color="red">{t('tui_error_prefix')}{error}</Text>
+        <Text color="gray">{t('tui_back_hint')}</Text>
       </Box>
     );
   }
@@ -99,27 +101,27 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
   if (!asset) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="gray">Chargement…</Text>
+        <Text color="gray">{t('tui_loading')}</Text>
       </Box>
     );
   }
 
   const fields: FieldRow[] = [
-    { label: 'ID', value: <Text color="gray">{asset.id}</Text> },
-    { label: 'Type', value: <Text>{asset.type}</Text> },
-    { label: 'Statut', value: <StatusBadge status={asset.status} /> },
-    { label: 'Classification', value: <ClassificationBadge classification={asset.classification} /> },
-    { label: 'Propriétaire', value: <Text>{asset.owner ?? '—'}</Text> },
-    { label: 'Localisation', value: <Text>{asset.location ?? '—'}</Text> },
-    { label: 'Description', value: <Text>{asset.description ?? '—'}</Text> },
-    { label: 'Date d\'entrée', value: <Text>{asset.entry_date}</Text> },
-    { label: 'Dernière revue', value: <Text>{asset.review_date ?? '—'}</Text> },
-    { label: 'Prochaine revue', value: <Text>{asset.next_review_date ?? '—'}</Text> },
-    { label: 'Restrictions accès', value: <Text>{asset.access_restrictions ?? '—'}</Text> },
-    { label: 'Méthode de rebut', value: <Text>{asset.disposal_method ?? '—'}</Text> },
-    { label: 'Tags', value: <Text>{asset.tags.length > 0 ? asset.tags.join(', ') : '—'}</Text> },
-    { label: 'Composants', value: <Text>{asset.components.length > 0 ? asset.components.map(c => c.version ? `${c.name}@${c.version}` : c.name).join(', ') : '—'}</Text> },
-    { label: 'Risques liés', value: <Text>{asset.related_risks.length > 0 ? asset.related_risks.join(', ') : '—'}</Text> },
+    { label: t('tui_detail_field_id'), value: <Text color="gray">{asset.id}</Text> },
+    { label: t('tui_detail_field_type'), value: <><TypeIcon type={asset.type} /><Text> {asset.type}</Text></> },
+    { label: t('tui_detail_field_status'), value: <StatusBadge status={asset.status} /> },
+    { label: t('tui_detail_field_class'), value: <ClassificationBadge classification={asset.classification} /> },
+    { label: t('tui_detail_field_owner'), value: <Text>{asset.owner ?? '—'}</Text> },
+    { label: t('tui_detail_field_location'), value: <Text>{asset.location ?? '—'}</Text> },
+    { label: t('tui_detail_field_description'), value: <Text>{asset.description ?? '—'}</Text> },
+    { label: t('tui_detail_field_entry_date'), value: <Text>{asset.entry_date}</Text> },
+    { label: t('tui_detail_field_last_review'), value: <Text>{asset.review_date ?? '—'}</Text> },
+    { label: t('tui_detail_field_next_review'), value: <Text>{asset.next_review_date ?? '—'}</Text> },
+    { label: t('tui_detail_field_access'), value: <Text>{asset.access_restrictions ?? '—'}</Text> },
+    { label: t('tui_detail_field_disposal'), value: <Text>{asset.disposal_method ?? '—'}</Text> },
+    { label: t('tui_detail_field_tags'), value: <Text>{asset.tags.length > 0 ? asset.tags.join(', ') : '—'}</Text> },
+    { label: t('tui_detail_field_components'), value: <Text>{asset.components.length > 0 ? asset.components.map(c => c.version ? `${c.name}@${c.version}` : c.name).join(', ') : '—'}</Text> },
+    { label: t('tui_detail_field_risks'), value: <Text>{asset.related_risks.length > 0 ? asset.related_risks.join(', ') : '—'}</Text> },
   ];
 
   // Split into two columns
@@ -159,13 +161,13 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
 
       {deleteConfirm && (
         <Box marginTop={1}>
-          <Text color="yellow">Supprimer "{asset.name}" ? </Text>
-          <Text color="white">(o/n)</Text>
+          <Text color="yellow">{t('tui_delete_confirm')}{asset.name}{t('tui_delete_confirm_end')}</Text>
+          <Text color="white">{t('tui_delete_confirm_keys')}</Text>
         </Box>
       )}
 
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-        <Text color="gray">e modifier  ·  r retirer  ·  d supprimer  ·  h historique  ·  Esc retour</Text>
+        <Text color="gray">{t('tui_detail_hint')}</Text>
       </Box>
     </Box>
   );
