@@ -126,6 +126,10 @@ export function AssetTable({ onNavigate }: AssetTableProps): React.ReactElement 
         onNavigate('owners');
         return;
       }
+      if (input === 't') {
+        onNavigate('tags');
+        return;
+      }
       if (input === 'q') {
         exit();
         return;

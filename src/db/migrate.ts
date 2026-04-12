@@ -112,6 +112,17 @@ CREATE INDEX IF NOT EXISTS \`idx_assets_classification\` ON \`assets\`(\`classif
 CREATE INDEX IF NOT EXISTS \`idx_assets_next_review_date\` ON \`assets\`(\`next_review_date\`);
 CREATE INDEX IF NOT EXISTS \`idx_assets_owner\` ON \`assets\`(\`owner\`);
   `,
+
+  // 0002 — table tags
+  `
+CREATE TABLE IF NOT EXISTS \`tags\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL UNIQUE,
+  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS \`idx_tags_name\` ON \`tags\`(\`name\`);
+  `,
 ];
 
 export function runMigrations(sqlite: Database): void {
