@@ -6,8 +6,9 @@ import { AssetDetail } from './AssetDetail.js';
 import { AssetHistory } from './AssetHistory.js';
 import { ComplianceDashboard } from './ComplianceDashboard.js';
 import { OwnerManager } from './OwnerManager.js';
+import { TagManager } from './TagManager.js';
 
-type View = 'list' | 'detail' | 'form' | 'history' | 'dashboard' | 'owners';
+type View = 'list' | 'detail' | 'form' | 'history' | 'dashboard' | 'owners' | 'tags';
 type FormMode = 'add' | 'edit';
 
 interface AppState {
@@ -75,5 +76,7 @@ export function App(): React.ReactElement {
       return <ComplianceDashboard onNavigate={onNavigate} />;
     case 'owners':
       return <OwnerManager onNavigate={onNavigate} />;
+    case 'tags':
+      return <TagManager onNavigate={onNavigate} />;
   }
 }

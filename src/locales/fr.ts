@@ -114,6 +114,19 @@ export const fr = {
   owner_reassign_prompt:     'ID du nouvel owner : ',
   err_generic:               'Erreur: ',
 
+  // ── tag commands ─────────────────────────────────────────────────────────────
+  no_tags:                   'Aucun tag enregistré.',
+  err_tag_not_found:         'Erreur: tag "',
+  err_tag_not_found_end:     '" introuvable.',
+  err_tag_already_exists:    'Erreur: le tag "',
+  err_tag_already_exists_end: '" existe déjà.',
+  err_tag_update_failed:     'Erreur lors de la mise à jour du tag.',
+  tag_updated:               'Tag "',
+  tag_updated_mid:           '" renommé en "',
+  tag_updated_end:           '".',
+  tag_deleted:               'Tag "',
+  tag_deleted_end:           '" supprimé.',
+
   // ── TUI — AssetTable ─────────────────────────────────────────────────────────
   tui_filter_label:          'Filtre: [',
   tui_filter_placeholder:    'nom ou propriétaire…',
@@ -123,7 +136,7 @@ export const fr = {
   tui_delete_confirm_end:    '" ? ',
   tui_delete_confirm_keys:   '(o/n)',
   tui_delete_error:          'Erreur suppression : ',
-  tui_asset_table_hint:      '↑↓/jk naviguer · Enter détail · n nouveau · d supprimer · D dashboard · o owners · Tab filtre · q quitter',
+  tui_asset_table_hint:      '↑↓/jk naviguer · Enter détail · n nouveau · d supprimer · D dashboard · o owners · t tags · Tab filtre · q quitter',
 
   // ── TUI — OwnerManager ───────────────────────────────────────────────────────
   tui_owners_title:          'Propriétaires',
@@ -171,6 +184,32 @@ export const fr = {
   tui_col_name:              'Nom',
   tui_col_email:             'Email',
   tui_col_dept:              'Département',
+
+  // ── TUI — TagManager ─────────────────────────────────────────────────────────
+  tui_tags_title:            'Tags',
+  tui_tag_filter_placeholder: 'nom du tag…',
+  tui_no_tag:                'Aucun tag.',
+  tui_tag_list_hint:         '↑↓/jk naviguer · n nouveau · e éditer · d supprimer · Tab filtre · Esc retour',
+  tui_tag_add_title:         'Nouveau tag',
+  tui_tag_edit_title:        'Modifier le tag',
+  tui_tag_label_name:        '* Nom:',
+  tui_tag_placeholder:       'nom du tag…',
+  tui_tag_btn_create:        ' [Créer] ',
+  tui_tag_btn_save:          ' [Sauvegarder] ',
+  tui_tag_cancel:            '    Esc: Annuler',
+  tui_tag_form_hint:         'Enter valider · Esc annuler',
+  tui_tag_err_name_req:      'Le nom est requis.',
+  tui_tag_err_duplicate:     'Ce tag existe déjà.',
+  tui_tag_err_update:        'Erreur lors de la mise à jour.',
+  tui_tag_created:           'Tag "',
+  tui_tag_created_end:       '" créé.',
+  tui_tag_updated_msg:       'Tag "',
+  tui_tag_updated_msg_mid:   '" renommé en "',
+  tui_tag_updated_msg_end:   '".',
+  tui_tag_delete_confirm:    'Supprimer le tag "',
+  tui_tag_delete_confirm_end: '" ? [o/n]',
+  tui_tag_deleted_msg:       'Tag "',
+  tui_tag_deleted_msg_end:   '" supprimé.',
 
   // ── TUI — AssetDetail ────────────────────────────────────────────────────────
   tui_detail_field_id:          'ID',

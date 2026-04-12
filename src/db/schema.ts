@@ -35,6 +35,12 @@ export const assets = sqliteTable('assets', {
   related_risks: text('related_risks').notNull().default('[]'), // JSON string
 });
 
+export const tags = sqliteTable('tags', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  created_at: text('created_at').notNull().default(sql`(DATETIME('now'))`),
+});
+
 export const auditLog = sqliteTable('audit_log', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   asset_id: text('asset_id').notNull(),

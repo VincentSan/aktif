@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { Command } from 'commander';
 import { resolveConfig } from './config.js';
 import { VERSION } from './version.js';
@@ -25,6 +26,10 @@ import { registerOwnerList } from './commands/owner-list.js';
 import { registerOwnerDelete } from './commands/owner-delete.js';
 import { registerOwnerEdit } from './commands/owner-edit.js';
 import { registerConfigEdit } from './commands/config-edit.js';
+import { registerTagNew } from './commands/tag-new.js';
+import { registerTagList } from './commands/tag-list.js';
+import { registerTagEdit } from './commands/tag-edit.js';
+import { registerTagDelete } from './commands/tag-delete.js';
 
 export const program = new Command();
 
@@ -79,6 +84,13 @@ registerOwnerList(owner);
 registerOwnerDelete(owner);
 registerOwnerEdit(owner);
 export { owner };
+
+const tags = program.command('tags').description('Gestion des tags');
+registerTagNew(tags);
+registerTagList(tags);
+registerTagEdit(tags);
+registerTagDelete(tags);
+export { tags };
 
 const config = program.command('config').description('Configuration de aktif');
 registerConfigEdit(config);
