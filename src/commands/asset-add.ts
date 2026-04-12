@@ -18,15 +18,10 @@ export function registerAssetAdd(asset: Command): void {
     .option('--location <l>', 'Localisation')
     .option('-o, --owner <o>', 'Propriétaire')
     .option('-c, --classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
-    .option('--access-restrictions <a>', "Restrictions d'accès")
     .option('-s, --status <s>', `Statut (${ASSET_STATUSES.join('|')})`, 'actif')
     .option('--entry-date <d>', "Date d'entrée (YYYY-MM-DD)")
-    .option('--review-date <d>', 'Date de révision (YYYY-MM-DD)')
-    .option('--next-review-date <d>', 'Prochaine révision (YYYY-MM-DD)')
     .option('--disposal-method <m>', 'Méthode de mise au rebut')
     .option('--tags <json>', 'Tags JSON (ex: ["tag1","tag2"])', '[]')
-    .option('--components <json>', 'Composants JSON', '[]')
-    .option('--related-risks <json>', 'Risques liés JSON', '[]')
     .action((opts) => {
       // Validation du type
       if (!ASSET_TYPES.includes(opts.type)) {
@@ -52,20 +47,8 @@ export function registerAssetAdd(asset: Command): void {
 
       // Parsing JSON
       let tags: string[] = [];
-      let components: Array<{ name: string; version?: string }> = [];
-      let relatedRisks: string[] = [];
       try {
         tags = JSON.parse(opts.tags);
-      } catch {
-        /* ignore */
-      }
-      try {
-        components = JSON.parse(opts.components);
-      } catch {
-        /* ignore */
-      }
-      try {
-        relatedRisks = JSON.parse(opts.relatedRisks ?? '[]');
       } catch {
         /* ignore */
       }
@@ -77,9 +60,8 @@ export function registerAssetAdd(asset: Command): void {
         ? resolveOwnerCli(db, opts.owner)
         : { name: null, id: null };
 
-      // Calculer next_review_date si non fourni
       const entryDate = opts.entryDate ?? today();
-      const nextReviewDate = opts.nextReviewDate ?? addDays(entryDate, config.defaultReviewPeriodDays);
+      const nextReviewDate = addDays(entryDate, config.defaultReviewPeriodDays);
 
       const newAsset = insertAsset(db, {
         name: opts.name,
@@ -89,15 +71,12 @@ export function registerAssetAdd(asset: Command): void {
         owner: ownerName,
         owner_id: ownerId,
         classification: opts.classification ?? null,
-        access_restrictions: opts.accessRestrictions ?? null,
         status: opts.status ?? 'actif',
         entry_date: entryDate,
-        review_date: opts.reviewDate ?? null,
+        review_date: null,
         next_review_date: nextReviewDate,
         disposal_method: opts.disposalMethod ?? null,
         tags,
-        components,
-        related_risks: relatedRisks,
       });
 
       appendAuditLog(db, {

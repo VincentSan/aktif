@@ -123,6 +123,41 @@ CREATE TABLE IF NOT EXISTS \`tags\` (
 
 CREATE INDEX IF NOT EXISTS \`idx_tags_name\` ON \`tags\`(\`name\`);
   `,
+
+  // 0003 — supprimer access_restrictions, components, related_risks
+  `
+CREATE TABLE IF NOT EXISTS \`assets_v3\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL,
+  \`type\` text NOT NULL,
+  \`description\` text,
+  \`location\` text,
+  \`owner\` text,
+  \`owner_id\` text REFERENCES \`owners\`(\`id\`),
+  \`classification\` text,
+  \`status\` text DEFAULT 'actif' NOT NULL,
+  \`entry_date\` text DEFAULT (DATETIME('now')) NOT NULL,
+  \`review_date\` text,
+  \`next_review_date\` text,
+  \`disposal_method\` text,
+  \`tags\` text DEFAULT '[]' NOT NULL
+);
+
+INSERT INTO \`assets_v3\`
+  SELECT \`id\`, \`name\`, \`type\`, \`description\`, \`location\`, \`owner\`, \`owner_id\`,
+    \`classification\`, \`status\`, \`entry_date\`,
+    \`review_date\`, \`next_review_date\`, \`disposal_method\`, \`tags\`
+  FROM \`assets\`;
+
+DROP TABLE \`assets\`;
+ALTER TABLE \`assets_v3\` RENAME TO \`assets\`;
+
+CREATE INDEX IF NOT EXISTS \`idx_assets_type\` ON \`assets\`(\`type\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_status\` ON \`assets\`(\`status\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_classification\` ON \`assets\`(\`classification\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_next_review_date\` ON \`assets\`(\`next_review_date\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_owner\` ON \`assets\`(\`owner\`);
+  `,
 ];
 
 export function runMigrations(sqlite: Database): void {

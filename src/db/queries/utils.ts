@@ -18,7 +18,5 @@ export function rowToAsset(row: typeof assets.$inferSelect): Asset {
   return {
     ...row,
     tags: parseJson<string[]>(row.tags),
-    components: parseJson<Array<{ name: string; version?: string }>>(row.components),
-    related_risks: parseJson<string[]>(row.related_risks),
   };
 }

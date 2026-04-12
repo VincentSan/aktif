@@ -221,11 +221,8 @@ export const en = {
   tui_detail_field_entry_date:  'Entry date',
   tui_detail_field_last_review: 'Last review',
   tui_detail_field_next_review: 'Next review',
-  tui_detail_field_access:      'Access restrictions',
   tui_detail_field_disposal:    'Disposal method',
   tui_detail_field_tags:        'Tags',
-  tui_detail_field_components:  'Components',
-  tui_detail_field_risks:       'Related risks',
   tui_detail_hint:              'e edit  ·  r retire  ·  d delete  ·  h history  ·  Esc back',
 
   // ── TUI — AssetForm ───────────────────────────────────────────────────────────

@@ -11,17 +11,12 @@ const baseAsset: Asset = {
   owner: null,
   owner_id: null,
   classification: null,
-  access_restrictions: null,
   status: 'actif',
   entry_date: '2026-01-01',
   review_date: null,
   next_review_date: null,
   disposal_method: null,
   tags: [],
-  components: [],
-  related_risks: [],
-  created_at: '2026-01-01T00:00:00',
-  updated_at: '2026-01-01T00:00:00',
 };
 
 describe('computeDiff', () => {

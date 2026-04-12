@@ -12,7 +12,7 @@ export function computeDiff(before: Asset, after: Asset): DiffResult {
 
     if (beforeVal === afterVal) continue;
 
-    // Comparaison profonde pour les tableaux JSON (tags, components, related_risks)
+    // Comparaison profonde pour les tableaux JSON (ex: tags)
     if (JSON.stringify(beforeVal) !== JSON.stringify(afterVal)) {
       diff[key] = { before: beforeVal, after: afterVal };
     }
