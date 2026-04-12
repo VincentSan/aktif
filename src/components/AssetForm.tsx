@@ -123,16 +123,28 @@ interface OwnerSearchSelectProps {
   onChange: (name: string, id: string | null) => void;
   onConfirm: () => void;
   onNewOwner: () => void;
+  onSkipBackward: () => void;
   isActive: boolean;
 }
 
-function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isActive }: OwnerSearchSelectProps): React.ReactElement {
+function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, onSkipBackward, isActive }: OwnerSearchSelectProps): React.ReactElement {
   const [query, setQuery] = useState('');
   const [listIndex, setListIndex] = useState(0);
 
   useEffect(() => {
-    if (!isActive) { setQuery(''); setListIndex(0); }
-  }, [isActive]);
+    if (!isActive) {
+      setQuery('');
+      setListIndex(0);
+    } else {
+      // Initialise la sélection sur la valeur courante pour ne pas effacer l'owner existant par erreur
+      const initialOptions = [OWNER_NONE, ...owners.map(o => o.name), OWNER_NEW];
+      const matchIndex = initialOptions.indexOf(value || OWNER_NONE);
+      setListIndex(matchIndex === -1 ? 0 : matchIndex);
+      setQuery('');
+    }
+  // Intentionnellement limité à [isActive] : on veut initialiser une seule fois à l'activation,
+  // avec les valeurs au moment où le champ prend le focus — pas à chaque changement de owners/value.
+  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lowerQuery = query.toLowerCase();
   const filtered = owners.filter(o => !lowerQuery || o.name.toLowerCase().includes(lowerQuery));
@@ -153,8 +165,16 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isA
   useInput((input, key) => {
     if (!isActive) return;
 
-    if (key.upArrow) { setListIndex(i => Math.max(i - 1, 0)); return; }
-    if (key.downArrow) { setListIndex(i => Math.min(i + 1, listOptions.length - 1)); return; }
+    if (key.upArrow) {
+      if (listIndex === 0) { onSkipBackward(); return; }
+      setListIndex(i => i - 1);
+      return;
+    }
+    if (key.downArrow) {
+      if (listIndex >= listOptions.length - 1) { onConfirm(); return; }
+      setListIndex(i => i + 1);
+      return;
+    }
 
     if (key.return) {
       const chosen = listOptions[safeIndex];
@@ -197,7 +217,7 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isA
         <Text color="gray">/ </Text>
         {query ? <Text color="white">{query}</Text> : <Text color="gray">filtrer…</Text>}
         <Text color="cyan">▌</Text>
-        <Text color="gray">  ↑↓ nav · Enter choisir · ⌫ effacer</Text>
+        <Text color="gray">  ↑↓ nav/sortir · Enter choisir · Tab passer · ⌫ effacer</Text>
       </Box>
       {scrollOffset > 0 && (
         <Text color="gray">  ↑ {scrollOffset} de plus</Text>
@@ -469,6 +489,7 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
                     }}
                     onConfirm={() => setFocusIndex(i => Math.min(i + 1, FIELDS.length))}
                     onNewOwner={() => { setNewOwnerMode(true); setNewOwnerFocus(0); }}
+                    onSkipBackward={() => setFocusIndex(i => Math.max(i - 1, 0))}
                     isActive={isActive}
                   />
                 ) : (
