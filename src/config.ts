@@ -1,9 +1,11 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 import type { Config } from './types/config.js';
 
 const HOME = homedir();
+
+export const RC_PATH = join(HOME, '.aktifrc');
 
 const DEFAULTS: Config = {
   db: join(HOME, '.aktif', 'aktif.db'),
@@ -24,8 +26,19 @@ export interface CliOverrides {
   user?: string;
 }
 
+export function ensureRcFile(): Partial<Config> {
+  const existing = readJsonFile(RC_PATH);
+  const hasAllFields = (Object.keys(DEFAULTS) as (keyof Config)[]).every(
+    (k) => k in existing
+  );
+  if (!hasAllFields) {
+    writeFileSync(RC_PATH, JSON.stringify({ ...DEFAULTS, ...existing }, null, 2) + '\n', 'utf-8');
+  }
+  return existing;
+}
+
 export function resolveConfig(cliOverrides: CliOverrides = {}): Config {
-  const homeRc = readJsonFile(join(HOME, '.aktifrc'));
+  const homeRc = ensureRcFile();
   const localConfig = readJsonFile(resolve(process.cwd(), 'aktif.config.json'));
 
   const envOverrides: Partial<Config> = {};

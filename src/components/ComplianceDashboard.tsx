@@ -4,6 +4,7 @@ import { getDb } from '../context.js';
 import { getComplianceReport } from '../db/queries/compliance.js';
 import type { ComplianceReport } from '../types/compliance.js';
 import type { NavigateFunction } from './App.js';
+import { t } from '../i18n.js';
 
 const BAR_WIDTH = 30;
 
@@ -46,8 +47,8 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
   if (error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="red">Erreur : {error}</Text>
-        <Text color="gray">Esc retour</Text>
+        <Text color="red">{t('tui_error_prefix')}{error}</Text>
+        <Text color="gray">{t('tui_back_hint')}</Text>
       </Box>
     );
   }
@@ -55,7 +56,7 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
   if (!data) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="gray">Chargement…</Text>
+        <Text color="gray">{t('tui_loading')}</Text>
       </Box>
     );
   }
@@ -63,30 +64,30 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
   return (
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
-        <Text bold color="cyan">Tableau de bord conformité ISO 27001</Text>
+        <Text bold color="cyan">{t('tui_dashboard_title')}</Text>
       </Box>
 
       <Box marginBottom={1}>
-        <Text color="gray">Actifs actifs : </Text>
+        <Text color="gray">{t('tui_dashboard_active')}</Text>
         <Text bold>{data.totalActive}</Text>
       </Box>
 
       {/* Progress bars */}
       <Box flexDirection="column" marginBottom={1}>
         <Box marginBottom={0}>
-          <Box width={28}><Text color="gray">Propriétaires</Text></Box>
+          <Box width={28}><Text color="gray">{t('tui_dashboard_metric_owner')}</Text></Box>
           <Text color={rateColor(data.ownerCoverageRate)}>{progressBar(data.ownerCoverageRate)}</Text>
         </Box>
         <Box marginBottom={0}>
-          <Box width={28}><Text color="gray">Classification</Text></Box>
+          <Box width={28}><Text color="gray">{t('tui_dashboard_metric_class')}</Text></Box>
           <Text color={rateColor(data.classificationCoverageRate)}>{progressBar(data.classificationCoverageRate)}</Text>
         </Box>
         <Box marginBottom={0}>
-          <Box width={28}><Text color="gray">Revues à jour</Text></Box>
+          <Box width={28}><Text color="gray">{t('tui_dashboard_metric_review')}</Text></Box>
           <Text color={rateColor(data.reviewCoverageRate)}>{progressBar(data.reviewCoverageRate)}</Text>
         </Box>
         <Box marginBottom={0}>
-          <Box width={28}><Text bold>Conformité globale</Text></Box>
+          <Box width={28}><Text bold>{t('tui_dashboard_metric_global')}</Text></Box>
           <Text bold color={rateColor(data.globalComplianceRate)}>{progressBar(data.globalComplianceRate)}</Text>
         </Box>
       </Box>
@@ -96,13 +97,13 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
         <Text color="gray">{'─'.repeat(50)}</Text>
       </Box>
       <Box marginBottom={1}>
-        <Text bold>Alertes</Text>
+        <Text bold>{t('tui_dashboard_alerts')}</Text>
       </Box>
 
       <Box flexDirection="column" marginBottom={1}>
         <Box flexDirection="row" gap={2}>
           <Box width={30}>
-            <Text color="gray">Revues en retard</Text>
+            <Text color="gray">{t('tui_dashboard_overdue')}</Text>
           </Box>
           <Text color={data.overdueAssets > 0 ? 'red' : 'green'} bold>
             {data.overdueAssets > 0 ? `⚠  ${data.overdueAssets}` : `✓  0`}
@@ -110,7 +111,7 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
         </Box>
         <Box flexDirection="row" gap={2}>
           <Box width={30}>
-            <Text color="gray">Sans propriétaire</Text>
+            <Text color="gray">{t('tui_dashboard_unowned')}</Text>
           </Box>
           <Text color={data.unownedAssets > 0 ? 'red' : 'green'} bold>
             {data.unownedAssets > 0 ? `⚠  ${data.unownedAssets}` : `✓  0`}
@@ -118,7 +119,7 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
         </Box>
         <Box flexDirection="row" gap={2}>
           <Box width={30}>
-            <Text color="gray">Non classifiés</Text>
+            <Text color="gray">{t('tui_dashboard_unclassified')}</Text>
           </Box>
           <Text color={data.unclassifiedAssets > 0 ? 'red' : 'green'} bold>
             {data.unclassifiedAssets > 0 ? `⚠  ${data.unclassifiedAssets}` : `✓  0`}
@@ -127,7 +128,7 @@ export function ComplianceDashboard({ onNavigate }: ComplianceDashboardProps): R
       </Box>
 
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-        <Text color="gray">Esc retour</Text>
+        <Text color="gray">{t('tui_dashboard_hint')}</Text>
       </Box>
     </Box>
   );

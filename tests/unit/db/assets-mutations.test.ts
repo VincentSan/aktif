@@ -13,9 +13,9 @@ function createTestDb() {
 
 const base = {
   name: 'Serveur X', type: 'matériel' as const, description: null, location: null,
-  owner: null, owner_id: null, classification: null, access_restrictions: null,
+  owner: null, owner_id: null, classification: null,
   status: 'actif' as const, entry_date: '2026-01-01', review_date: null,
-  next_review_date: null, disposal_method: null, tags: [], components: [], related_risks: [],
+  next_review_date: null, disposal_method: null, tags: [],
 };
 
 describe('updateAsset', () => {
@@ -28,18 +28,35 @@ describe('updateAsset', () => {
     expect(after.name).toBe('Serveur X'); // inchangé
   });
 
-  it('updated_at est mis à jour par le trigger SQLite', () => {
-    const db = createTestDb();
-    const inserted = insertAsset(db, base);
-    const { before, after } = updateAsset(db, inserted.id, { owner: 'Alice' });
-    // Le trigger updated_at doit mettre à jour updated_at
-    // (peut être identique si rapide, on vérifie juste qu'il est défini)
-    expect(after.updated_at).toBeDefined();
-  });
-
   it('lève une erreur pour un ID inexistant', () => {
     const db = createTestDb();
     expect(() => updateAsset(db, 'ghost', { owner: 'X' })).toThrow('introuvable');
+  });
+
+  it('met review_date automatiquement à jour (non null après update)', () => {
+    const db = createTestDb();
+    const inserted = insertAsset(db, base);
+    expect(inserted.review_date).toBeNull();
+    const { after } = updateAsset(db, inserted.id, { owner: 'Sophie' });
+    expect(after.review_date).not.toBeNull();
+    expect(typeof after.review_date).toBe('string');
+  });
+
+  it('recalcule next_review_date avec la période configurée', () => {
+    const db = createTestDb();
+    const inserted = insertAsset(db, base);
+    const { after } = updateAsset(db, inserted.id, { owner: 'Sophie' }, 90);
+    expect(after.next_review_date).not.toBeNull();
+    // next_review_date doit être postérieure à review_date
+    expect(after.next_review_date! > after.review_date!).toBe(true);
+  });
+
+  it('ne permet pas de passer review_date manuellement via changes (auto-écrasé)', () => {
+    const db = createTestDb();
+    const inserted = insertAsset(db, base);
+    const { after } = updateAsset(db, inserted.id, { review_date: '1999-01-01' });
+    // La valeur auto doit écraser la valeur passée
+    expect(after.review_date).not.toBe('1999-01-01');
   });
 });
 

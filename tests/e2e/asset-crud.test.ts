@@ -91,6 +91,54 @@ describe('asset CRUD e2e', () => {
     expect(historyOut).toContain('retire');
   });
 
+  it('asset edit --disposal-method persiste la valeur', async () => {
+    const { stdout: addOut } = await run(
+      ['asset', 'add', '--name', 'Asset Rebut', '--type', 'matériel'],
+      dbPath
+    );
+    const id = addOut.trim();
+
+    const { exitCode } = await run(
+      ['asset', 'edit', id, '--disposal-method', 'Recyclage certifié'],
+      dbPath
+    );
+    expect(exitCode).toBe(0);
+
+    const { stdout } = await run(['asset', 'show', id], dbPath);
+    expect(stdout).toContain('Recyclage certifié');
+  });
+
+  it('asset edit --tags persiste les tags', async () => {
+    const { stdout: addOut } = await run(
+      ['asset', 'add', '--name', 'Asset Tags', '--type', 'logiciel'],
+      dbPath
+    );
+    const id = addOut.trim();
+
+    const { exitCode } = await run(
+      ['asset', 'edit', id, '--tags', '["iso27001","critique"]'],
+      dbPath
+    );
+    expect(exitCode).toBe(0);
+
+    const { stdout } = await run(['asset', 'show', id], dbPath);
+    expect(stdout).toContain('iso27001');
+  });
+
+  it('review_date est remplie après un asset edit', async () => {
+    const { stdout: addOut } = await run(
+      ['asset', 'add', '--name', 'Asset Review', '--type', 'service'],
+      dbPath
+    );
+    const id = addOut.trim();
+
+    await run(['asset', 'edit', id, '--description', 'Mise à jour'], dbPath);
+
+    const { stdout } = await run(['asset', 'show', id], dbPath);
+    // Le champ dernière revue ne doit plus être vide
+    expect(stdout).not.toMatch(/Dernière revue\s*—/);
+  });
+
   it('asset delete avec --yes supprime et laisse une trace dans changelog', async () => {
     const { stdout: addOut } = await run(
       ['asset', 'add', '--name', 'À Supprimer', '--type', 'service'],

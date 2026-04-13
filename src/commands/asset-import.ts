@@ -20,19 +20,20 @@ interface CsvRow {
   owner?: string;
   owner_id?: string;
   classification?: string;
-  access_restrictions?: string;
   status?: string;
   entry_date?: string;
   review_date?: string;
   next_review_date?: string;
   disposal_method?: string;
   tags?: string;
+  // Colonnes legacy ignorées silencieusement
+  access_restrictions?: string;
   components?: string;
   related_risks?: string;
   [key: string]: string | undefined;
 }
 
-function rowToAssetData(row: CsvRow, tags: string[], components: Array<{ name: string; version?: string }>, related_risks: string[]): NewAsset {
+function rowToAssetData(row: CsvRow, tags: string[]): NewAsset {
   return {
     name: row.name!.trim(),
     type: row.type as AssetType,
@@ -41,15 +42,12 @@ function rowToAssetData(row: CsvRow, tags: string[], components: Array<{ name: s
     owner: row.owner?.trim() ?? null,
     owner_id: row.owner_id?.trim() ?? null,
     classification: (row.classification as Classification) ?? null,
-    access_restrictions: row.access_restrictions?.trim() ?? null,
     status: (row.status as AssetStatus) ?? 'actif',
     entry_date: row.entry_date?.trim() ?? today(),
-    review_date: row.review_date?.trim() ?? null,
+    review_date: null,
     next_review_date: row.next_review_date?.trim() ?? null,
     disposal_method: row.disposal_method?.trim() ?? null,
     tags,
-    components,
-    related_risks,
   };
 }
 
@@ -139,9 +137,7 @@ export function registerAssetImport(asset: Command): void {
 
         // Parsing des colonnes JSON
         const tags = parseJson<string[]>(row.tags);
-        const components = parseJson<Array<{ name: string; version?: string }>>(row.components);
-        const related_risks = parseJson<string[]>(row.related_risks);
-        const assetData = rowToAssetData(row, tags, components, related_risks);
+        const assetData = rowToAssetData(row, tags);
 
         const rowId = row.id && row.id.trim() !== '' ? row.id.trim() : null;
 

@@ -13,12 +13,12 @@ export function ClassificationBadge({ classification }: ClassificationBadgeProps
 
   switch (classification) {
     case 'secret':
-      return <Text color="red" bold>{classification}</Text>;
+      return <Text color="red" bold>▲ {classification}</Text>;
     case 'confidentiel':
-      return <Text color="red">{classification}</Text>;
+      return <Text color="red">◆ {classification}</Text>;
     case 'interne':
-      return <Text color="yellow">{classification}</Text>;
+      return <Text color="yellow">● {classification}</Text>;
     case 'public':
-      return <Text color="green">{classification}</Text>;
+      return <Text color="green">○ {classification}</Text>;
   }
 }

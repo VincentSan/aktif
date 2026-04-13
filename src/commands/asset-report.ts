@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { getDb } from '../context.js';
 import { getComplianceReport } from '../db/queries/compliance.js';
 import { RESET, BOLD, RED, GREEN, YELLOW, CYAN, GRAY, MAGENTA } from '../utils/format.js';
+import { t } from '../i18n.js';
 
 const BAR_WIDTH = 30;
 
@@ -49,50 +50,50 @@ export function registerAssetReport(asset: Command): void {
       // Titre
       lines.push('');
       lines.push(`${BOLD}${CYAN}╔══════════════════════════════════════════════╗${RESET}`);
-      lines.push(`${BOLD}${CYAN}║   Rapport de conformité ISO 27001 A.5.9      ║${RESET}`);
+      lines.push(`${BOLD}${CYAN}${t('report_title')}${RESET}`);
       lines.push(`${BOLD}${CYAN}╚══════════════════════════════════════════════╝${RESET}`);
       lines.push('');
 
       // Métadonnées
-      lines.push(`  ${GRAY}Généré le :${RESET} ${now}`);
-      lines.push(`  ${GRAY}Actifs actifs :${RESET} ${BOLD}${report.totalActive}${RESET}`);
+      lines.push(`  ${GRAY}${t('report_generated')}${RESET} ${now}`);
+      lines.push(`  ${GRAY}${t('report_active_assets')}${RESET} ${BOLD}${report.totalActive}${RESET}`);
       lines.push('');
 
       // Métriques
-      lines.push(`${BOLD}Couverture par métrique${RESET}`);
+      lines.push(`${BOLD}${t('report_coverage_title')}${RESET}`);
       lines.push(`  ${'─'.repeat(60)}`);
-      lines.push(metricLine('Propriétaire (owner)', report.ownerCoverageRate, report.withOwner, report.totalActive));
-      lines.push(metricLine('Classification', report.classificationCoverageRate, report.withClassification, report.totalActive));
-      lines.push(metricLine('Révision à jour', report.reviewCoverageRate, report.reviewUpToDate, report.totalActive));
+      lines.push(metricLine(t('report_metric_owner'), report.ownerCoverageRate, report.withOwner, report.totalActive));
+      lines.push(metricLine(t('report_metric_classification'), report.classificationCoverageRate, report.withClassification, report.totalActive));
+      lines.push(metricLine(t('report_metric_review'), report.reviewCoverageRate, report.reviewUpToDate, report.totalActive));
       lines.push('');
 
       // Taux global
       const globalColor = rateColor(report.globalComplianceRate);
       const globalBar = progressBar(report.globalComplianceRate);
-      lines.push(`${BOLD}Taux de conformité global${RESET}`);
+      lines.push(`${BOLD}${t('report_compliance_title')}${RESET}`);
       lines.push(`  ${'─'.repeat(60)}`);
       lines.push(
         `  ${BOLD}${globalColor}${globalBar} ${report.globalComplianceRate}%${RESET}` +
-        `  ${GRAY}(moyenne owner + classification + révision)${RESET}`
+        `  ${GRAY}${t('report_compliance_legend')}${RESET}`
       );
       lines.push('');
 
       // Alertes
       const hasAlerts = report.overdueAssets > 0 || report.unownedAssets > 0 || report.unclassifiedAssets > 0;
-      lines.push(`${BOLD}${MAGENTA}Alertes${RESET}`);
+      lines.push(`${BOLD}${MAGENTA}${t('report_alerts_title')}${RESET}`);
       lines.push(`  ${'─'.repeat(60)}`);
 
       if (!hasAlerts) {
-        lines.push(`  ${GREEN}Aucune alerte — inventaire conforme.${RESET}`);
+        lines.push(`  ${GREEN}${t('report_no_alerts')}${RESET}`);
       } else {
         if (report.overdueAssets > 0) {
-          lines.push(`  ${RED}⚠  ${report.overdueAssets} actif(s) en retard de révision${RESET}`);
+          lines.push(`  ${RED}⚠  ${report.overdueAssets}${t('report_overdue')}${RESET}`);
         }
         if (report.unownedAssets > 0) {
-          lines.push(`  ${YELLOW}⚠  ${report.unownedAssets} actif(s) sans propriétaire${RESET}`);
+          lines.push(`  ${YELLOW}⚠  ${report.unownedAssets}${t('report_unowned')}${RESET}`);
         }
         if (report.unclassifiedAssets > 0) {
-          lines.push(`  ${YELLOW}⚠  ${report.unclassifiedAssets} actif(s) non classifiés${RESET}`);
+          lines.push(`  ${YELLOW}⚠  ${report.unclassifiedAssets}${t('report_unclassified')}${RESET}`);
         }
       }
 
@@ -102,7 +103,7 @@ export function registerAssetReport(asset: Command): void {
 
       if (opts.failBelow !== undefined && report.globalComplianceRate < opts.failBelow) {
         process.stderr.write(
-          `${RED}Taux global (${report.globalComplianceRate}%) inférieur au seuil requis (${opts.failBelow}%).${RESET}\n`
+          `${RED}${t('report_fail_below')}${report.globalComplianceRate}${t('report_fail_below_mid')}${opts.failBelow}${t('report_fail_below_end')}${RESET}\n`
         );
         process.exit(1);
       }

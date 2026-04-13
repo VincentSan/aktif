@@ -17,9 +17,9 @@ function createTestDb() {
 const base = {
   name: 'Asset', type: 'matériel' as const, description: null, location: null,
   owner: 'Alice', owner_id: null, classification: 'interne' as const,
-  access_restrictions: null, status: 'actif' as const, entry_date: '2026-01-01',
+  status: 'actif' as const, entry_date: '2026-01-01',
   review_date: null, next_review_date: '2099-01-01', disposal_method: null,
-  tags: [], components: [], related_risks: [],
+  tags: [],
 };
 
 describe('getOverdueAssets', () => {

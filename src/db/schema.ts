@@ -22,19 +22,20 @@ export const assets = sqliteTable('assets', {
   classification: text('classification', {
     enum: ['public', 'interne', 'confidentiel', 'secret'],
   }),
-  access_restrictions: text('access_restrictions'),
   status: text('status', {
     enum: ['actif', 'en_maintenance', 'en_cours_de_mise_au_rebut', 'retiré'],
   }).notNull().default('actif'),
-  entry_date: text('entry_date').notNull().default(sql`(DATE('now'))`),
+  entry_date: text('entry_date').notNull().default(sql`(DATETIME('now'))`),
   review_date: text('review_date'),
   next_review_date: text('next_review_date'),
   disposal_method: text('disposal_method'),
   tags: text('tags').notNull().default('[]'),            // JSON string
-  components: text('components').notNull().default('[]'), // JSON string
-  related_risks: text('related_risks').notNull().default('[]'), // JSON string
+});
+
+export const tags = sqliteTable('tags', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
   created_at: text('created_at').notNull().default(sql`(DATETIME('now'))`),
-  updated_at: text('updated_at').notNull().default(sql`(DATETIME('now'))`),
 });
 
 export const auditLog = sqliteTable('audit_log', {

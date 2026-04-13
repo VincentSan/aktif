@@ -6,15 +6,16 @@ import { formatDate } from '../utils/date.js';
 import type { AssetFilters } from '../types/filters.js';
 import { ASSET_TYPES, CLASSIFICATIONS, ASSET_STATUSES } from '../types/asset.js';
 import type { AssetType, Classification, AssetStatus } from '../types/asset.js';
+import { t } from '../i18n.js';
 
 export function registerAssetList(asset: Command): void {
   asset
     .command('list')
     .description('Lister les actifs')
-    .option('--type <t>', `Filtrer par type (${ASSET_TYPES.join('|')})`)
-    .option('--classification <c>', `Filtrer par classification (${CLASSIFICATIONS.join('|')})`)
-    .option('--owner <o>', 'Filtrer par propriétaire')
-    .option('--status <s>', `Filtrer par statut (${ASSET_STATUSES.join('|')})`)
+    .option('-t, --type <t>', `Filtrer par type (${ASSET_TYPES.join('|')})`)
+    .option('-c, --classification <c>', `Filtrer par classification (${CLASSIFICATIONS.join('|')})`)
+    .option('-o, --owner <o>', 'Filtrer par propriétaire')
+    .option('-s, --status <s>', `Filtrer par statut (${ASSET_STATUSES.join('|')})`)
     .action((opts) => {
       const db = getDb();
       const filters: AssetFilters = {};
@@ -26,13 +27,13 @@ export function registerAssetList(asset: Command): void {
       const assets = listAssets(db, filters);
 
       const output = formatTable(assets as unknown as Record<string, unknown>[], [
-        { key: 'id', label: 'ID', format: (v) => shortId(v as string) },
-        { key: 'name', label: 'Nom', width: 20 },
-        { key: 'type', label: 'Type' },
-        { key: 'classification', label: 'Classification', format: (v) => formatClassification(v as Classification | null) },
-        { key: 'owner', label: 'Propriétaire', format: (v) => v ? String(v) : '—' },
-        { key: 'status', label: 'Statut', format: (v) => formatStatus(v as AssetStatus) },
-        { key: 'next_review_date', label: 'Prochaine révision', format: (v) => formatDate(v as string | null) },
+        { key: 'id', label: t('col_id'), format: (v) => shortId(v as string) },
+        { key: 'name', label: t('col_name'), width: 20 },
+        { key: 'type', label: t('col_type') },
+        { key: 'classification', label: t('col_classification'), format: (v) => formatClassification(v as Classification | null) },
+        { key: 'owner', label: t('col_owner'), format: (v) => v ? String(v) : '—' },
+        { key: 'status', label: t('col_status'), format: (v) => formatStatus(v as AssetStatus) },
+        { key: 'next_review_date', label: t('col_next_review'), format: (v) => formatDate(v as string | null) },
       ]);
 
       process.stdout.write(output + '\n');

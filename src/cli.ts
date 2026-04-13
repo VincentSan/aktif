@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { Command } from 'commander';
 import { resolveConfig } from './config.js';
 import { VERSION } from './version.js';
@@ -19,8 +20,16 @@ import { registerAssetExport } from './commands/asset-export.js';
 import { registerAssetImport } from './commands/asset-import.js';
 import { registerAssetReport } from './commands/asset-report.js';
 import { registerAssetConfig } from './commands/asset-config.js';
+import { registerAssetSearch } from './commands/asset-search.js';
 import { registerOwnerAdd } from './commands/owner-add.js';
 import { registerOwnerList } from './commands/owner-list.js';
+import { registerOwnerDelete } from './commands/owner-delete.js';
+import { registerOwnerEdit } from './commands/owner-edit.js';
+import { registerConfigEdit } from './commands/config-edit.js';
+import { registerTagNew } from './commands/tag-new.js';
+import { registerTagList } from './commands/tag-list.js';
+import { registerTagEdit } from './commands/tag-edit.js';
+import { registerTagDelete } from './commands/tag-delete.js';
 
 export const program = new Command();
 
@@ -30,7 +39,6 @@ program
   .version(VERSION)
   .option('--db <path>', 'Chemin vers le fichier SQLite');
 
-// Hook preAction : initialise la connexion et les migrations avant chaque commande
 program.hook('preAction', () => {
   const opts = program.opts<{ db?: string }>();
   const config = resolveConfig({ db: opts.db });
@@ -39,7 +47,6 @@ program.hook('preAction', () => {
   setContext(db, config);
 });
 
-// Enregistrer le groupe de commandes 'asset'
 const asset = program.command('asset').description('Gestion des actifs');
 registerAssetAdd(asset);
 registerAssetList(asset);
@@ -56,34 +63,46 @@ registerAssetExport(asset);
 registerAssetImport(asset);
 registerAssetReport(asset);
 registerAssetConfig(asset);
+registerAssetSearch(asset);
 
-asset
+export { asset };
+
+program
   .command('tui')
-  .description('Lance l\'interface interactive (TUI)')
+  .description("Lancer l'interface interactive (TUI)")
   .action(async () => {
+    process.stdout.write('\x1b[3J\x1b[2J\x1b[H');
     const { render } = await import('ink');
     const React = await import('react');
     const { App } = await import('./components/App.js');
     render(React.default.createElement(App, null));
   });
 
-export { asset };
-
-// Enregistrer le groupe de commandes 'owner'
 const owner = program.command('owner').description('Gestion des propriétaires');
 registerOwnerAdd(owner);
 registerOwnerList(owner);
+registerOwnerDelete(owner);
+registerOwnerEdit(owner);
 export { owner };
+
+const tags = program.command('tags').description('Gestion des tags');
+registerTagNew(tags);
+registerTagList(tags);
+registerTagEdit(tags);
+registerTagDelete(tags);
+export { tags };
+
+const config = program.command('config').description('Configuration de aktif');
+registerConfigEdit(config);
+export { config };
 
 export { getDb, getConfig } from './context.js';
 
-// Gestion des erreurs non rattrapées
 process.on('uncaughtException', (err) => {
   process.stderr.write(`Erreur: ${err.message}\n`);
   process.exit(1);
 });
 
-// Point d'entrée
 program.parseAsync(process.argv).catch((err: Error) => {
   process.stderr.write(`Erreur: ${err.message}\n`);
   process.exit(1);
