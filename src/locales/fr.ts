@@ -126,6 +126,7 @@ export const fr = {
   tag_updated_end:           '".',
   tag_deleted:               'Tag "',
   tag_deleted_end:           '" supprimé.',
+  tag_assets_updated:        ' actif(s) mis à jour.',
 
   // ── TUI — AssetTable ─────────────────────────────────────────────────────────
   tui_filter_label:          'Filtre: [',

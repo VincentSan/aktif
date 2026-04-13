@@ -1,8 +1,9 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, like } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { tags } from '../schema.js';
+import { tags, assets } from '../schema.js';
 import type { Db } from '../connection.js';
 import type { Tag } from '../../types/tag.js';
+import { parseJson, serializeJson } from './utils.js';
 
 export function insertTag(db: Db, name: string): Tag {
   const normalized = name.trim().toLowerCase();
@@ -44,4 +45,27 @@ export function updateTag(db: Db, id: string, newName: string): Tag | null {
 
 export function deleteTag(db: Db, id: string): void {
   db.delete(tags).where(eq(tags.id, id)).run();
+}
+
+function patchTagInAssets(db: Db, tagName: string, transform: (tags: string[]) => string[]): number {
+  const normalized = tagName.trim().toLowerCase();
+  const rows = db.select().from(assets).where(like(assets.tags, `%"${normalized}"%`)).all();
+  for (const row of rows) {
+    const updated = transform(parseJson<string[]>(row.tags));
+    db.update(assets).set({ tags: serializeJson(updated) }).where(eq(assets.id, row.id)).run();
+  }
+  return rows.length;
+}
+
+export function renameTagInAssets(db: Db, oldName: string, newName: string): number {
+  const normalizedOld = oldName.trim().toLowerCase();
+  const normalizedNew = newName.trim().toLowerCase();
+  return patchTagInAssets(db, normalizedOld, (tags) =>
+    tags.map((t) => (t === normalizedOld ? normalizedNew : t)),
+  );
+}
+
+export function removeTagFromAssets(db: Db, tagName: string): number {
+  const normalized = tagName.trim().toLowerCase();
+  return patchTagInAssets(db, normalized, (tags) => tags.filter((t) => t !== normalized));
 }

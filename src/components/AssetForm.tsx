@@ -591,10 +591,10 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
     if (key.return) {
       if (focusIndex === FIELDS.length) {
         handleSubmit();
-      } else if (currentField?.kind !== 'owner-select') {
+      } else if (currentField?.kind !== 'owner-select' && currentField?.kind !== 'tag-select') {
         setFocusIndex((i) => Math.min(i + 1, FIELDS.length));
       }
-      // owner-select : géré par OwnerSearchSelect via onConfirm/onNewOwner
+      // owner-select et tag-select : gérés par leurs composants via onConfirm
       return;
     }
   });
