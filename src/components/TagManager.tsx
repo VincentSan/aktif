@@ -8,8 +8,6 @@ import {
   updateTag,
   deleteTag,
   getTagByName,
-  renameTagInAssets,
-  removeTagFromAssets,
 } from '../db/queries/tags.js';
 import type { Tag } from '../types/tag.js';
 import { col } from './shared/col.js';
@@ -144,7 +142,6 @@ export function TagManager({ onNavigate }: TagManagerProps): React.ReactElement 
     if (existing && existing.id !== state.tagId) { setEditError(t('tui_tag_err_duplicate')); return; }
     const updated = updateTag(getDb(), state.tagId, editValue);
     if (!updated) { setEditError(t('tui_tag_err_update')); return; }
-    renameTagInAssets(getDb(), state.oldName, updated.name);
     setMessage(`${t('tui_tag_updated_msg')}${state.oldName}${t('tui_tag_updated_msg_mid')}${updated.name}${t('tui_tag_updated_msg_end')}`);
     setState({ view: 'list' });
     reload();
@@ -154,7 +151,6 @@ export function TagManager({ onNavigate }: TagManagerProps): React.ReactElement 
     if (state.view !== 'delete-confirm') return;
     if (key.escape || input === 'n') { setState({ view: 'list' }); return; }
     if (input === 'o' || input === 'y') {
-      removeTagFromAssets(getDb(), state.tagName);
       deleteTag(getDb(), state.tagId);
       setMessage(`${t('tui_tag_deleted_msg')}${state.tagName}${t('tui_tag_deleted_msg_end')}`);
       setState({ view: 'list' });

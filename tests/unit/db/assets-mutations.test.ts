@@ -13,9 +13,9 @@ function createTestDb() {
 
 const base = {
   name: 'Serveur X', type: 'matériel' as const, description: null, location: null,
-  owner: null, owner_id: null, classification: null,
+  owner: null, owner_id: null, classification: null, access_restrictions: null,
   status: 'actif' as const, entry_date: '2026-01-01', review_date: null,
-  next_review_date: null, disposal_method: null, tags: [],
+  next_review_date: null, disposal_method: null, tags: [], components: [], related_risks: [],
 };
 
 describe('updateAsset', () => {
@@ -31,32 +31,6 @@ describe('updateAsset', () => {
   it('lève une erreur pour un ID inexistant', () => {
     const db = createTestDb();
     expect(() => updateAsset(db, 'ghost', { owner: 'X' })).toThrow('introuvable');
-  });
-
-  it('met review_date automatiquement à jour (non null après update)', () => {
-    const db = createTestDb();
-    const inserted = insertAsset(db, base);
-    expect(inserted.review_date).toBeNull();
-    const { after } = updateAsset(db, inserted.id, { owner: 'Sophie' });
-    expect(after.review_date).not.toBeNull();
-    expect(typeof after.review_date).toBe('string');
-  });
-
-  it('recalcule next_review_date avec la période configurée', () => {
-    const db = createTestDb();
-    const inserted = insertAsset(db, base);
-    const { after } = updateAsset(db, inserted.id, { owner: 'Sophie' }, 90);
-    expect(after.next_review_date).not.toBeNull();
-    // next_review_date doit être postérieure à review_date
-    expect(after.next_review_date! > after.review_date!).toBe(true);
-  });
-
-  it('ne permet pas de passer review_date manuellement via changes (auto-écrasé)', () => {
-    const db = createTestDb();
-    const inserted = insertAsset(db, base);
-    const { after } = updateAsset(db, inserted.id, { review_date: '1999-01-01' });
-    // La valeur auto doit écraser la valeur passée
-    expect(after.review_date).not.toBe('1999-01-01');
   });
 });
 

@@ -10,12 +10,15 @@ const HEADERS: (keyof Asset)[] = [
   'owner',
   'owner_id',
   'classification',
+  'access_restrictions',
   'status',
   'entry_date',
   'review_date',
   'next_review_date',
   'disposal_method',
   'tags',
+  'components',
+  'related_risks',
 ];
 
 export function exportToCsv(assets: Asset[]): string {

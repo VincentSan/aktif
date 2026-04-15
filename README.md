@@ -1,41 +1,41 @@
-# aktif — ISO 27001 A.5.9 Asset Inventory
+# aktif — Inventaire d'actifs ISO 27001 A.5.9
 
-**aktif** is a lightweight CLI tool to manage an asset inventory in compliance with ISO 27001 A.5.9. It replaces static spreadsheets with a versioned, automatable, and auditable solution — without the complexity of a full CMDB.
+**aktif** est un outil CLI léger pour gérer un inventaire d'actifs conformément à la norme ISO 27001 A.5.9. Il remplace les tableurs statiques par une solution versionnée, automatable et auditable, sans imposer la complexité d'une CMDB.
 
-- Immutable audit trail (SQLite append-only)
-- CSV, JSON export for auditors
-- A.5.9 compliance report in one command
-- Standalone binary — no dependencies to install
+- Audit trail immutable (SQLite append-only)
+- Export CSV, JSON pour vos auditeurs
+- Rapport de conformité A.5.9 en une commande
+- Binaire standalone — aucune dépendance à installer
 
 ---
 
 ## Installation
 
-### Download binary (recommended)
+### Téléchargement du binaire (recommandé)
 
-Download the binary for your platform from [GitHub Releases](https://github.com/VincentSan/aktif/releases):
+Téléchargez le binaire correspondant à votre système depuis [GitHub Releases](https://github.com/votrecompte/aktif/releases) :
 
 ```bash
 # macOS Apple Silicon
-curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-macos-arm64 -o aktif
+curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-macos-arm64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 
 # macOS Intel
-curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-macos-x64 -o aktif
+curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-macos-x64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 
 # Linux x86_64
-curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-linux-x64 -o aktif
+curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-linux-x64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 ```
 
-### Development mode
+### Mode développement
 
 ```bash
-git clone https://github.com/VincentSan/aktif
+git clone https://github.com/votrecompte/aktif
 cd aktif
 bun install
 bun run src/cli.ts asset list
@@ -43,83 +43,79 @@ bun run src/cli.ts asset list
 
 ---
 
-## Quick start
+## Démarrage rapide
 
-Five commands to get started:
+Cinq commandes pour démarrer :
 
 ```bash
-# 1. Add an asset
-aktif asset add --name "Production server" --type matériel --owner "John Doe" --classification Confidentiel
+# 1. Ajouter un actif
+aktif asset add --name "Serveur de production" --type matériel --owner "Sophie Martin" --classification Confidentiel
 
-# 2. List assets
+# 2. Lister les actifs
 aktif asset list
 
-# 3. Show asset details
+# 3. Voir le détail d'un actif
 aktif asset show <id>
 
-# 4. Edit an asset
-aktif asset edit <id> --classification Secret --owner "John Doe"
+# 4. Modifier un actif
+aktif asset edit <id> --classification Secret --owner "Mehdi Benali"
 
-# 5. Delete an asset
+# 5. Supprimer un actif
 aktif asset delete <id>
 ```
 
-The SQLite database is automatically created at `~/.aktif/aktif.db` on first run.
+La base de données SQLite est créée automatiquement dans `~/.aktif/aktif.db` au premier lancement.
 
 ---
 
-## Command reference
+## Référence complète des commandes
 
-### Global flag
+### Flag global
 
 ```
-aktif --db <path>    Point to a specific SQLite file
+aktif --db <chemin>    Pointer vers une base SQLite spécifique
 ```
-
----
 
 ### asset add
 
-Add a new asset to the inventory.
+Ajoute un nouvel actif à l'inventaire.
 
 ```
-aktif asset add --name <name> --type <type> [options]
+aktif asset add --name <nom> --type <type> [options]
 ```
 
-| Flag                        | Required | Description                                                                      |
-| --------------------------- | -------- | -------------------------------------------------------------------------------- |
-| `--name <n>`                | yes      | Asset name                                                                       |
-| `--type <t>`                | yes      | `informationnel` \| `logiciel` \| `matériel` \| `service` \| `personnel`         |
-| `--description <d>`         | no       | Functional description                                                           |
-| `--location <l>`            | no       | Physical or logical location                                                     |
-| `--owner <o>`               | no       | Owner name                                                                       |
-| `--classification <c>`      | no       | `Public` \| `Interne` \| `Confidentiel` \| `Secret`                              |
-| `--access-restrictions <a>` | no       | Description of access controls                                                   |
-| `--status <s>`              | no       | `actif` (default) \| `en_maintenance` \| `en_cours_de_mise_au_rebut` \| `retiré` |
-| `--entry-date <d>`          | no       | Entry date YYYY-MM-DD (default: today)                                           |
-| `--review-date <d>`         | no       | Last review date YYYY-MM-DD                                                      |
-| `--next-review-date <d>`    | no       | Next review date YYYY-MM-DD (default: +365 days)                                 |
-| `--disposal-method <m>`     | no       | Disposal method                                                                  |
-| `--tags <json>`             | no       | Tags JSON, e.g. `'["tag1","tag2"]'`                                              |
-| `--components <json>`       | no       | Components JSON, e.g. `'[{"name":"nginx","version":"1.25"}]'`                    |
-| `--related-risks <json>`    | no       | Risk references, e.g. `'["R-01","R-05"]'`                                        |
+| Flag | Obligatoire | Description |
+|------|-------------|-------------|
+| `--name <n>` | oui | Nom de l'actif |
+| `--type <t>` | oui | `informationnel` \| `logiciel` \| `matériel` \| `service` \| `personnel` |
+| `--description <d>` | non | Description fonctionnelle |
+| `--location <l>` | non | Emplacement physique ou logique |
+| `--owner <o>` | non | Propriétaire |
+| `--classification <c>` | non | `Public` \| `Interne` \| `Confidentiel` \| `Secret` |
+| `--access-restrictions <a>` | non | Description des contrôles d'accès |
+| `--status <s>` | non | `actif` (défaut) \| `en_maintenance` \| `en_cours_de_mise_au_rebut` \| `retiré` |
+| `--entry-date <d>` | non | Date d'entrée YYYY-MM-DD (défaut : aujourd'hui) |
+| `--review-date <d>` | non | Date de dernière révision YYYY-MM-DD |
+| `--next-review-date <d>` | non | Prochaine révision YYYY-MM-DD (défaut : +365 jours) |
+| `--disposal-method <m>` | non | Méthode de mise au rebut |
+| `--tags <json>` | non | Tags JSON, ex : `'["tag1","tag2"]'` |
+| `--components <json>` | non | Composants JSON, ex : `'[{"name":"nginx","version":"1.25"}]'` |
+| `--related-risks <json>` | non | Références aux risques, ex : `'["R-01","R-05"]'` |
 
-Returns the UUID of the created asset.
+Retourne l'UUID de l'actif créé.
 
 ```bash
 aktif asset add \
-  --name "GitLab server" \
+  --name "Serveur GitLab" \
   --type logiciel \
-  --owner "John Doe" \
+  --owner "Mehdi Benali" \
   --classification Confidentiel \
   --tags '["infrastructure","ci-cd"]'
 ```
 
----
-
 ### asset list
 
-List assets with optional filters.
+Liste les actifs avec filtres optionnels.
 
 ```
 aktif asset list [--type <t>] [--classification <c>] [--owner <o>] [--status <s>]
@@ -127,40 +123,25 @@ aktif asset list [--type <t>] [--classification <c>] [--owner <o>] [--status <s>
 
 ```bash
 aktif asset list --status actif --classification Confidentiel
-aktif asset list --owner "John Doe"
+aktif asset list --owner "Sophie Martin"
 aktif asset list --type logiciel
 ```
 
----
-
 ### asset show
 
-Display the full details of an asset.
+Affiche le détail complet d'un actif.
 
 ```
 aktif asset show <id>
 ```
 
----
-
-### asset search
-
-Full-text search across asset names, descriptions, and tags.
-
-```
-aktif asset search <query>
-```
-
 ```bash
-aktif asset search "gitlab"
-aktif asset search "production"
+aktif asset show a1b2c3d4-...
 ```
-
----
 
 ### asset edit
 
-Edit one or more fields of an existing asset. Accepts the same flags as `add`.
+Modifie un ou plusieurs champs d'un actif existant. Accepte les mêmes flags que `add` (sauf `--name` et `--type` qui restent optionnels).
 
 ```
 aktif asset edit <id> [--name <n>] [--classification <c>] [--owner <o>] ...
@@ -170,21 +151,17 @@ aktif asset edit <id> [--name <n>] [--classification <c>] [--owner <o>] ...
 aktif asset edit a1b2c3d4 --classification Secret --review-date 2026-03-15
 ```
 
----
-
 ### asset retire
 
-Set an asset's status to `en_cours_de_mise_au_rebut`.
+Passe l'actif au statut `en_cours_de_mise_au_rebut`.
 
 ```
 aktif asset retire <id>
 ```
 
----
-
 ### asset delete
 
-Permanently delete an asset. Prompts for confirmation, or use `--yes` for scripts.
+Supprime définitivement un actif. Demande confirmation interactive, ou utilisez `--yes` pour les scripts.
 
 ```
 aktif asset delete <id> [--yes]
@@ -194,21 +171,17 @@ aktif asset delete <id> [--yes]
 aktif asset delete a1b2c3d4 --yes
 ```
 
----
-
 ### asset history
 
-Display the chronological history of changes for an asset.
+Affiche l'historique chronologique des modifications d'un actif.
 
 ```
 aktif asset history <id>
 ```
 
----
-
 ### asset changelog
 
-Display the global log of all changes.
+Affiche le journal global de toutes les modifications.
 
 ```
 aktif asset changelog [--limit <n>] [--since <date>]
@@ -219,41 +192,33 @@ aktif asset changelog --limit 20
 aktif asset changelog --since 2026-01-01
 ```
 
----
-
 ### asset review
 
-List assets whose review date has passed. Exits with code 1 if overdue assets exist (usable in CI).
+Liste les actifs dont la date de révision est dépassée. Quitte avec code 1 si des actifs sont en retard (utilisable en CI).
 
 ```
 aktif asset review
 ```
 
----
-
 ### asset owners
 
-List assets with no assigned owner.
+Liste les actifs sans propriétaire attribué.
 
 ```
 aktif asset owners
 ```
 
----
-
 ### asset unclassified
 
-List assets with no classification.
+Liste les actifs sans classification.
 
 ```
 aktif asset unclassified
 ```
 
----
-
 ### asset report
 
-Display the ISO 27001 A.5.9 compliance report: owner coverage rate, classification, review, and global score.
+Affiche le rapport de conformité ISO 27001 A.5.9 : taux de couverture propriétaire, classification, révision, et score global.
 
 ```
 aktif asset report [--fail-below <n>]
@@ -261,268 +226,125 @@ aktif asset report [--fail-below <n>]
 
 ```bash
 aktif asset report
-aktif asset report --fail-below 80   # exit 1 if score < 80%
+aktif asset report --fail-below 80   # exit 1 si score < 80%
 ```
-
----
 
 ### asset export
 
-Export assets to CSV or JSON.
+Exporte les actifs au format CSV ou JSON.
 
 ```
-aktif asset export --format csv|json [--output <path>] [--type <t>] [--status <s>] [--owner <o>] [--classification <c>]
+aktif asset export --format csv|json [--output <chemin>] [--type <t>] [--status <s>] [--owner <o>] [--classification <c>]
 ```
 
 ```bash
-aktif asset export --format csv --output inventory.csv
-aktif asset export --format json > inventory.json
-aktif asset export --format csv --status actif --output active-assets.csv
+aktif asset export --format csv --output inventaire.csv
+aktif asset export --format json > inventaire.json
+aktif asset export --format csv --status actif --output actifs-actifs.csv
 ```
-
----
 
 ### asset import
 
-Import assets from a CSV file (migration from Excel).
+Importe des actifs depuis un fichier CSV (migration depuis Excel).
 
 ```
-aktif asset import --file <path> [--strict] [--overwrite]
+aktif asset import --file <chemin> [--strict] [--overwrite]
 ```
 
-| Flag            | Description                                          |
-| --------------- | ---------------------------------------------------- |
-| `--file <path>` | Path to the CSV file                                 |
-| `--strict`      | Stop on first error (default: continue)              |
-| `--overwrite`   | Overwrite asset if ID already exists (default: skip) |
+| Flag | Description |
+|------|-------------|
+| `--file <chemin>` | Chemin vers le fichier CSV |
+| `--strict` | Arrêter à la première erreur (défaut : continuer) |
+| `--overwrite` | Écraser l'actif si l'ID existe déjà (défaut : ignorer) |
 
 ```bash
-aktif asset import --file inventory.csv
-aktif asset import --file inventory.csv --strict --overwrite
+aktif asset import --file inventaire-excel.csv
+aktif asset import --file inventaire-excel.csv --strict --overwrite
 ```
-
----
-
-### asset config
-
-Read or write configuration values from `~/.aktifrc`.
-
-```
-aktif asset config get <key>
-aktif asset config set <key> <value>
-```
-
-Supported keys: `db`, `user`, `defaultReviewPeriodDays`
-
-```bash
-aktif asset config get db
-aktif asset config set defaultReviewPeriodDays 180
-```
-
----
 
 ### owner add
 
-Add an owner to the `owners` table.
+Ajoute un propriétaire dans la table `owners`.
 
 ```
-aktif owner add --name <name> [--email <e>] [--department <d>]
-```
-
-```bash
-aktif owner add --name "John Doe" --email "john@example.com" --department "Security"
-```
-
----
-
-### owner list
-
-List all registered owners.
-
-```
-aktif owner list
-```
-
----
-
-### owner edit
-
-Edit an existing owner (by UUID or prefix).
-
-```
-aktif owner edit <id> [--name <n>] [--email <e>] [--department <d>]
+aktif owner add --name <nom> [--email <e>] [--department <d>]
 ```
 
 ```bash
-aktif owner edit a1b2c3d4 --email "new@example.com" --department "IT"
+aktif owner add --name "Sophie Martin" --email "sophie@exemple.fr" --department "SSI"
 ```
 
 ---
 
-### owner delete
+## Guide de migration depuis Excel
 
-Delete an owner. If linked assets exist, you will be prompted to choose how to handle them.
+### Format CSV attendu
 
-```
-aktif owner delete <id> [--reassign <owner-id>] [--clear] [--force]
-```
-
-| Flag              | Description                               |
-| ----------------- | ----------------------------------------- |
-| `--reassign <id>` | Reassign linked assets to another owner   |
-| `--clear`         | Set owner to null on linked assets        |
-| `--force`         | Delete linked assets along with the owner |
-
-```bash
-aktif owner delete a1b2c3d4 --reassign b2c3d4e5
-aktif owner delete a1b2c3d4 --clear
-```
-
----
-
-### tags new
-
-Create a new tag.
-
-```
-aktif tags new <name>
-```
-
-```bash
-aktif tags new infrastructure
-aktif tags new ci-cd
-```
-
----
-
-### tags list
-
-List all tags.
-
-```
-aktif tags list
-```
-
----
-
-### tags edit
-
-Rename a tag. Automatically updates all assets referencing it.
-
-```
-aktif tags edit <old_name> <new_name>
-```
-
-```bash
-aktif tags edit ci-cd cicd
-```
-
----
-
-### tags delete
-
-Delete a tag. Automatically removes it from all assets referencing it.
-
-```
-aktif tags delete <name>
-```
-
-```bash
-aktif tags delete obsolete-tag
-```
-
----
-
-### tui
-
-Launch the interactive terminal UI.
-
-```
-aktif tui
-```
-
----
-
-### config edit
-
-Open `~/.aktifrc` in your system editor (`$EDITOR` or `vi`). Creates the file with a default template if it does not exist.
-
-```
-aktif config edit
-```
-
----
-
-## Migration guide from Excel
-
-### Expected CSV format
-
-The CSV file must be **UTF-8** encoded with a header row. The `name` and `type` columns are required.
+Le fichier CSV doit être encodé en **UTF-8** avec une ligne d'en-tête. Les colonnes `name` et `type` sont obligatoires.
 
 ```csv
 name,type,description,owner,classification,status,entry_date,next_review_date,location,tags
-Production server,matériel,Main server,John Doe,Confidentiel,actif,2024-01-15,2025-01-15,Paris DC,["production"]
-Office 365 License,logiciel,Office suite,Foo Doe,Interne,actif,2023-06-01,2024-06-01,Cloud,,
-Customer database,informationnel,CRM data,John Doe,Secret,actif,2024-03-01,2025-03-01,DB Server,,["crm","gdpr"]
+Serveur de production,matériel,Serveur principal,Sophie Martin,Confidentiel,actif,2024-01-15,2025-01-15,Datacenter Paris,["production"]
+Licence Office 365,logiciel,Suite bureautique,Mehdi Benali,Interne,actif,2023-06-01,2024-06-01,Cloud,,
+Base de données clients,informationnel,Données CRM,Sophie Martin,Secret,actif,2024-03-01,2025-03-01,Serveur BDD,,["crm","rgpd"]
 ```
 
-### Accepted values
+### Valeurs acceptées
 
-| Column                                          | Values                                                           |
-| ----------------------------------------------- | ---------------------------------------------------------------- |
-| `type`                                          | `informationnel`, `logiciel`, `matériel`, `service`, `personnel` |
-| `classification`                                | `Public`, `Interne`, `Confidentiel`, `Secret`                    |
-| `status`                                        | `actif`, `en_maintenance`, `en_cours_de_mise_au_rebut`, `retiré` |
-| `entry_date`, `next_review_date`, `review_date` | `YYYY-MM-DD` format                                              |
-| `tags`, `components`, `related_risks`           | Valid JSON or empty                                              |
+| Colonne | Valeurs |
+|---------|---------|
+| `type` | `informationnel`, `logiciel`, `matériel`, `service`, `personnel` |
+| `classification` | `Public`, `Interne`, `Confidentiel`, `Secret` |
+| `status` | `actif`, `en_maintenance`, `en_cours_de_mise_au_rebut`, `retiré` |
+| `entry_date`, `next_review_date`, `review_date` | Format `YYYY-MM-DD` |
+| `tags`, `components`, `related_risks` | JSON valide ou vide |
 
-### Migration steps
+### Étapes de migration
 
 ```bash
-# 1. Export your Excel file to CSV (Save as > CSV UTF-8)
-# 2. Check encoding and required columns
-# 3. Import
-aktif asset import --file inventory.csv
+# 1. Exporter votre fichier Excel en CSV (Enregistrer sous > CSV UTF-8)
+# 2. Vérifier l'encodage et les colonnes obligatoires
+# 3. Importer
+aktif asset import --file inventaire.csv
 
-# 4. Verify the result
+# 4. Vérifier le résultat
 aktif asset list
 aktif asset report
 ```
 
 ---
 
-## Full ISO 27001 workflow example
+## Exemple de workflow ISO 27001 complet
 
-Scenario: prepare an A.5.9 compliance audit from scratch.
+Scénario : préparer un audit de conformité A.5.9 depuis zéro.
 
 ```bash
-# Step 1 — Import existing inventory from Excel
-aktif asset import --file inventory-2025.csv
-# Result: 47 asset(s) imported, 0 skipped, 0 error(s)
+# Étape 1 — Importer l'inventaire existant depuis Excel
+aktif asset import --file inventaire-2025.csv
+# Résultat : 47 actif(s) importé(s), 0 ignoré(s), 0 erreur(s)
 
-# Step 2 — Find gaps
-aktif asset owners          # assets without owner
-aktif asset unclassified    # assets without classification
-aktif asset review          # overdue assets
+# Étape 2 — Identifier les lacunes
+aktif asset owners          # actifs sans propriétaire
+aktif asset unclassified    # actifs sans classification
+aktif asset review          # actifs en retard de révision
 
-# Step 3 — Search and fix gaps
-aktif asset search "server"
-aktif asset edit a1b2c3d4 --owner "John Doe" --classification Confidentiel
+# Étape 3 — Corriger les lacunes
+aktif asset edit a1b2c3d4 --owner "Sophie Martin" --classification Confidentiel
 aktif asset edit e5f6a7b8 --next-review-date 2027-03-15
 
-# Step 4 — Check compliance
+# Étape 4 — Vérifier la conformité
 aktif asset report
-# Shows: owner rate, classification, review rate, and global score
+# Affiche : taux propriétaire, classification, révision et score global
 
-# Step 5 — Export for the auditor
-aktif asset export --format csv --output inventory-audit-2026.csv
-aktif asset export --format json --output inventory-audit-2026.json
+# Étape 5 — Exporter pour l'auditeur
+aktif asset export --format csv --output inventaire-audit-2026.csv
+aktif asset export --format json --output inventaire-audit-2026.json
 
-# Step 6 — Prove traceability
+# Étape 6 — Prouver la traçabilité
 aktif asset changelog --since 2025-01-01
 aktif asset history a1b2c3d4
 
-# In CI: ensure the score doesn't drop below 80%
+# En CI : vérifier que le score ne descend pas en dessous de 80%
 aktif asset report --fail-below 80
 ```
 
@@ -530,76 +352,77 @@ aktif asset report --fail-below 80
 
 ## Configuration
 
-Configuration is resolved in this priority order (highest to lowest):
+La configuration se lit dans cet ordre de priorité (du plus prioritaire au moins prioritaire) :
 
-1. CLI flag `--db <path>`
-2. Environment variables `AKTIF_DB` / `AKTIF_USER`
-3. `aktif.config.json` in the current directory
-4. `~/.aktifrc`
-5. Default values
+1. Flag CLI `--db <chemin>`
+2. Variable d'environnement `AKTIF_DB` / `AKTIF_USER`
+3. Fichier `aktif.config.json` dans le répertoire courant
+4. Fichier `~/.aktifrc`
+5. Valeurs par défaut
 
-### `~/.aktifrc` file
+### Fichier `~/.aktifrc`
 
 ```json
 {
-  "db": "/path/to/aktif.db",
-  "user": "John Doe",
+  "db": "/chemin/vers/aktif.db",
+  "user": "Sophie Martin",
   "defaultReviewPeriodDays": 365
 }
 ```
 
-| Key                       | Default             | Description                                 |
-| ------------------------- | ------------------- | ------------------------------------------- |
-| `db`                      | `~/.aktif/aktif.db` | Path to the SQLite database                 |
-| `user`                    | `$USER`             | Name used in the audit trail (`changed_by`) |
-| `defaultReviewPeriodDays` | `365`               | Default review interval in days             |
+| Clé | Défaut | Description |
+|-----|--------|-------------|
+| `db` | `~/.aktif/aktif.db` | Chemin vers la base SQLite |
+| `user` | `$USER` | Nom utilisé dans l'audit trail (`changed_by`) |
+| `defaultReviewPeriodDays` | `365` | Intervalle de révision par défaut en jours |
 
-### Environment variables
+### Variables d'environnement
 
 ```bash
-export AKTIF_DB=/nas/shared/aktif.db    # shared database on NAS
-export AKTIF_USER="John Doe"       # author for the audit trail
+export AKTIF_DB=/nas/partage/aktif.db    # base partagée sur NAS
+export AKTIF_USER="Sophie Martin"        # auteur pour l'audit trail
 ```
 
 ---
 
 ## Limitations
 
-- **Local SQLite**: single write process at a time. WAL mode is enabled by default to reduce concurrent access conflicts.
-- **No multi-user**: no role management or authentication. For a shared NAS, point all users to the same file via `--db` or `AKTIF_DB`.
-- **PDF export** not available in v1.0.0.
-- **Windows not supported** — targets: macOS arm64, macOS x64, Linux x64.
+- **SQLite local** : un seul processus en écriture à la fois. Le mode WAL est activé par défaut pour réduire les conflits en accès concurrent.
+- **Pas de multi-utilisateur** : pas de gestion de rôles ni d'authentification. Pour un NAS partagé, pointez tous les utilisateurs vers le même fichier via `--db` ou `AKTIF_DB`.
+- **Pas d'interface web** : outil CLI uniquement (TUI en Sprint 3).
+- **Windows non supporté** en v0.1.0 — cibles : macOS arm64, macOS x64, Linux x64.
+- **Export PDF** non disponible en v0.1.0.
 
 ---
 
-## Development
+## Développement
 
 ```bash
-# Install dependencies
+# Installer les dépendances
 bun install
 
-# Run in dev mode
+# Lancer en mode dev
 bun run src/cli.ts asset list
 
 # Tests
 bun test
 
-# Type checking
+# Vérification des types
 bun run typecheck
 
 # Lint
 bun run lint
 
-# Build standalone binaries
+# Compiler les binaires standalone
 bun run build
 
-# Generate and apply migrations
+# Générer et appliquer les migrations
 bun run db:generate
 bun run db:migrate
 ```
 
 ---
 
-## License
+## Licence
 
-MIT — see [LICENSE](./LICENSE).
+MIT — voir [LICENSE](./LICENSE).

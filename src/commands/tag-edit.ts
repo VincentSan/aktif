@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { getDb } from '../context.js';
-import { getTagByName, updateTag, renameTagInAssets } from '../db/queries/tags.js';
+import { getTagByName, updateTag } from '../db/queries/tags.js';
 import { t } from '../i18n.js';
 
 export function registerTagEdit(parent: Command): void {
@@ -28,8 +28,6 @@ export function registerTagEdit(parent: Command): void {
         process.exit(1);
       }
 
-      const count = renameTagInAssets(db, existing.name, updated.name);
       process.stdout.write(`${t('tag_updated')}${existing.name}${t('tag_updated_mid')}${updated.name}${t('tag_updated_end')}\n`);
-      if (count > 0) process.stdout.write(`${count}${t('tag_assets_updated')}\n`);
     });
 }

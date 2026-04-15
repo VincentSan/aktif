@@ -5,10 +5,9 @@ import { getDb, getConfig } from '../context.js';
 import { insertAsset, updateAsset, getAssetById } from '../db/queries/assets.js';
 import { appendAuditLog } from '../db/queries/audit-log.js';
 import { listOwners, insertOwner } from '../db/queries/owners.js';
-import { listTags, insertTag, getTagByName } from '../db/queries/tags.js';
 import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
-import { addDays, today } from '../utils/date.js';
+import { today } from '../utils/date.js';
 import {
   ASSET_TYPES,
   CLASSIFICATIONS,
@@ -18,7 +17,6 @@ import {
   type AssetStatus,
 } from '../types/asset.js';
 import type { Owner } from '../types/owner.js';
-import type { Tag } from '../types/tag.js';
 import type { NavigateFunction } from './App.js';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -35,7 +33,7 @@ interface AssetFormProps {
   onNavigate: NavigateFunction;
 }
 
-type FieldKind = 'text' | 'select' | 'owner-select' | 'tag-select';
+type FieldKind = 'text' | 'select' | 'owner-select';
 
 interface FieldDef {
   key: string;
@@ -49,15 +47,13 @@ interface FieldDef {
 // ─── Définition des champs ────────────────────────────────────────────────────
 
 const FIELDS: FieldDef[] = [
-  { key: 'name',            label: 'Nom',              required: true,  kind: 'text'   },
-  { key: 'type',            label: 'Type',             required: true,  kind: 'select', options: ASSET_TYPES },
-  { key: 'description',     label: 'Description',      required: false, kind: 'text'   },
-  { key: 'owner',           label: 'Propriétaire',     required: false, kind: 'owner-select' },
-  { key: 'classification',  label: 'Classification',   required: false, kind: 'select', options: CLASSIFICATIONS, nullable: true },
-  { key: 'status',          label: 'Statut',           required: true,  kind: 'select', options: ASSET_STATUSES },
-  { key: 'location',        label: 'Localisation',     required: false, kind: 'text'   },
-  { key: 'disposal_method', label: 'Méthode de rebut', required: false, kind: 'text'   },
-  { key: 'tags',            label: 'Tags',             required: false, kind: 'tag-select' },
+  { key: 'name',           label: 'Nom',            required: true,  kind: 'text'   },
+  { key: 'type',           label: 'Type',           required: true,  kind: 'select', options: ASSET_TYPES },
+  { key: 'description',    label: 'Description',    required: false, kind: 'text'   },
+  { key: 'owner',          label: 'Propriétaire',   required: false, kind: 'owner-select' },
+  { key: 'classification', label: 'Classification', required: false, kind: 'select', options: CLASSIFICATIONS, nullable: true },
+  { key: 'status',         label: 'Statut',         required: true,  kind: 'select', options: ASSET_STATUSES },
+  { key: 'location',       label: 'Localisation',   required: false, kind: 'text'   },
 ];
 
 // ─── InlineSelect (petites listes fixes : type, classification, statut) ───────
@@ -127,28 +123,16 @@ interface OwnerSearchSelectProps {
   onChange: (name: string, id: string | null) => void;
   onConfirm: () => void;
   onNewOwner: () => void;
-  onSkipBackward: () => void;
   isActive: boolean;
 }
 
-function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, onSkipBackward, isActive }: OwnerSearchSelectProps): React.ReactElement {
+function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, isActive }: OwnerSearchSelectProps): React.ReactElement {
   const [query, setQuery] = useState('');
   const [listIndex, setListIndex] = useState(0);
 
   useEffect(() => {
-    if (!isActive) {
-      setQuery('');
-      setListIndex(0);
-    } else {
-      // Initialise la sélection sur la valeur courante pour ne pas effacer l'owner existant par erreur
-      const initialOptions = [OWNER_NONE, ...owners.map(o => o.name), OWNER_NEW];
-      const matchIndex = initialOptions.indexOf(value || OWNER_NONE);
-      setListIndex(matchIndex === -1 ? 0 : matchIndex);
-      setQuery('');
-    }
-  // Intentionnellement limité à [isActive] : on veut initialiser une seule fois à l'activation,
-  // avec les valeurs au moment où le champ prend le focus — pas à chaque changement de owners/value.
-  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isActive) { setQuery(''); setListIndex(0); }
+  }, [isActive]);
 
   const lowerQuery = query.toLowerCase();
   const filtered = owners.filter(o => !lowerQuery || o.name.toLowerCase().includes(lowerQuery));
@@ -169,16 +153,8 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, onS
   useInput((input, key) => {
     if (!isActive) return;
 
-    if (key.upArrow) {
-      if (listIndex === 0) { onSkipBackward(); return; }
-      setListIndex(i => i - 1);
-      return;
-    }
-    if (key.downArrow) {
-      if (listIndex >= listOptions.length - 1) { onConfirm(); return; }
-      setListIndex(i => i + 1);
-      return;
-    }
+    if (key.upArrow) { setListIndex(i => Math.max(i - 1, 0)); return; }
+    if (key.downArrow) { setListIndex(i => Math.min(i + 1, listOptions.length - 1)); return; }
 
     if (key.return) {
       const chosen = listOptions[safeIndex];
@@ -221,7 +197,7 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, onS
         <Text color="gray">/ </Text>
         {query ? <Text color="white">{query}</Text> : <Text color="gray">filtrer…</Text>}
         <Text color="cyan">▌</Text>
-        <Text color="gray">  ↑↓ nav/sortir · Enter choisir · Tab passer · ⌫ effacer</Text>
+        <Text color="gray">  ↑↓ nav · Enter choisir · ⌫ effacer</Text>
       </Box>
       {scrollOffset > 0 && (
         <Text color="gray">  ↑ {scrollOffset} de plus</Text>
@@ -248,172 +224,6 @@ function OwnerSearchSelect({ owners, value, onChange, onConfirm, onNewOwner, onS
   );
 }
 
-// ─── TagMultiSelect ───────────────────────────────────────────────────────────
-
-const TAG_MAX_VISIBLE = 8;
-
-interface TagMultiSelectProps {
-  tags: Tag[];
-  selected: string[];
-  onChange: (tags: string[]) => void;
-  onConfirm: () => void;
-  onSkipBackward: () => void;
-  onTagCreated: () => void;
-  isActive: boolean;
-}
-
-function TagMultiSelect({ tags, selected, onChange, onConfirm, onSkipBackward, onTagCreated, isActive }: TagMultiSelectProps): React.ReactElement {
-  const [query, setQuery] = useState('');
-  const [listIndex, setListIndex] = useState(0);
-  const [newTagMode, setNewTagMode] = useState(false);
-  const [newTagValue, setNewTagValue] = useState('');
-  const [newTagError, setNewTagError] = useState<string | null>(null);
-
-  const TAG_NEW = '+ Nouveau tag';
-
-  useEffect(() => {
-    if (!isActive) {
-      setQuery('');
-      setListIndex(0);
-      setNewTagMode(false);
-      setNewTagValue('');
-      setNewTagError(null);
-    }
-  }, [isActive]);
-
-  const lowerQuery = query.toLowerCase();
-  const filtered = tags.filter(t => !lowerQuery || t.name.toLowerCase().includes(lowerQuery));
-  const listOptions: Array<{ label: string; isNew: boolean }> = [
-    ...filtered.map(t => ({ label: t.name, isNew: false })),
-    { label: TAG_NEW, isNew: true },
-  ];
-
-  const safeIndex = Math.min(Math.max(0, listIndex), listOptions.length - 1);
-  const scrollOffset = Math.min(
-    Math.max(0, safeIndex - Math.floor(TAG_MAX_VISIBLE / 2)),
-    Math.max(0, listOptions.length - TAG_MAX_VISIBLE),
-  );
-  const visible = listOptions.slice(scrollOffset, scrollOffset + TAG_MAX_VISIBLE);
-
-  function handleCreateTag() {
-    const name = newTagValue.trim().toLowerCase();
-    if (!name) { setNewTagError('Le nom est requis.'); return; }
-    const db = getDb();
-    let tag = getTagByName(db, name);
-    const isNew = !tag;
-    if (!tag) tag = insertTag(db, name);
-    if (!selected.includes(tag.name)) onChange([...selected, tag.name]);
-    if (isNew) onTagCreated();
-    setNewTagMode(false);
-    setNewTagValue('');
-    setNewTagError(null);
-  }
-
-  useInput((input, key) => {
-    if (!isActive) return;
-
-    if (newTagMode) {
-      if (key.escape) { setNewTagMode(false); setNewTagValue(''); setNewTagError(null); return; }
-      if (key.return) { handleCreateTag(); return; }
-      if (key.backspace || key.delete) { setNewTagValue(v => v.slice(0, -1)); return; }
-      if (!key.ctrl && !key.meta && !key.escape && input && input.length === 1) {
-        setNewTagValue(v => v + input);
-        setNewTagError(null);
-      }
-      return;
-    }
-
-    if (key.upArrow) {
-      if (listIndex === 0) { onSkipBackward(); return; }
-      setListIndex(i => i - 1);
-      return;
-    }
-    if (key.downArrow) {
-      if (listIndex >= listOptions.length - 1) { onConfirm(); return; }
-      setListIndex(i => i + 1);
-      return;
-    }
-    if (key.return || input === ' ') {
-      const chosen = listOptions[safeIndex];
-      if (!chosen) return;
-      if (chosen.isNew) { setNewTagMode(true); setNewTagValue(''); return; }
-      const name = chosen.label;
-      const next = selected.includes(name)
-        ? selected.filter(s => s !== name)
-        : [...selected, name];
-      onChange(next);
-      return;
-    }
-    if (key.tab) { onConfirm(); return; }
-    if (key.backspace || key.delete) { setQuery(q => q.slice(0, -1)); setListIndex(0); return; }
-    if (!key.ctrl && !key.meta && !key.escape && input && input.length === 1) {
-      setQuery(q => q + input);
-      setListIndex(0);
-    }
-  });
-
-  if (!isActive) {
-    return (
-      <Box>
-        <Text color="white">{selected.length > 0 ? selected.join(', ') : '—'}</Text>
-        <Text color="gray"> ▼</Text>
-      </Box>
-    );
-  }
-
-  return (
-    <Box flexDirection="column">
-      {newTagMode ? (
-        <Box flexDirection="column">
-          <Box>
-            <Text color="cyan">Nouveau tag : </Text>
-            <TextInput value={newTagValue} onChange={setNewTagValue} focus placeholder="nom du tag…" />
-          </Box>
-          {newTagError && <Text color="red">⚠ {newTagError}</Text>}
-          <Text color="gray">Enter créer · Esc annuler</Text>
-        </Box>
-      ) : (
-        <>
-          <Box>
-            <Text color="gray">/ </Text>
-            {query ? <Text color="white">{query}</Text> : <Text color="gray">filtrer…</Text>}
-            <Text color="cyan">▌</Text>
-            <Text color="gray">  ↑↓ nav · Espace/Enter toggle · Tab terminer · ⌫ effacer</Text>
-          </Box>
-          {selected.length > 0 && (
-            <Box>
-              <Text color="cyan">✓ </Text>
-              <Text color="white">{selected.join(', ')}</Text>
-            </Box>
-          )}
-          {scrollOffset > 0 && <Text color="gray">  ↑ {scrollOffset} de plus</Text>}
-          {visible.map((opt, i) => {
-            const absIndex = scrollOffset + i;
-            const isHighlighted = absIndex === safeIndex;
-            const isChecked = selected.includes(opt.label);
-            const isSpecial = opt.isNew;
-            return (
-              <Box key={opt.label}>
-                <Text
-                  color={isHighlighted ? 'black' : isSpecial ? 'cyan' : 'white'}
-                  backgroundColor={isHighlighted ? 'cyan' : undefined}
-                >
-                  {isHighlighted ? '▶ ' : '  '}
-                  {!isSpecial && (isChecked ? '✓ ' : '○ ')}
-                  {opt.label}
-                </Text>
-              </Box>
-            );
-          })}
-          {scrollOffset + TAG_MAX_VISIBLE < listOptions.length && (
-            <Text color="gray">  ↓ {listOptions.length - scrollOffset - TAG_MAX_VISIBLE} de plus</Text>
-          )}
-        </>
-      )}
-    </Box>
-  );
-}
-
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.ReactElement {
@@ -425,7 +235,6 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
     classification: '',
     status: ASSET_STATUSES[0],
     location: '',
-    disposal_method: '',
   });
 
   const [focusIndex, setFocusIndex] = useState(0);
@@ -434,9 +243,6 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
 
   const [owners, setOwners] = useState<Owner[]>([]);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string | null>(null);
-
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [newOwnerMode, setNewOwnerMode] = useState(false);
   const [newOwnerValues, setNewOwnerValues] = useState({ name: '', email: '', department: '' });
@@ -448,9 +254,7 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
   // ── Chargement ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const db = getDb();
-    setOwners(listOwners(db));
-    setAvailableTags(listTags(db));
+    setOwners(listOwners(getDb()));
   }, []);
 
   useEffect(() => {
@@ -466,10 +270,8 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
           classification: asset.classification ?? '',
           status: asset.status ?? ASSET_STATUSES[0],
           location: asset.location ?? '',
-          disposal_method: asset.disposal_method ?? '',
         });
         setSelectedOwnerId(asset.owner_id ?? null);
-        setSelectedTags(asset.tags ?? []);
       } catch (e: unknown) {
         setGlobalError(e instanceof Error ? e.message : String(e));
       }
@@ -496,10 +298,8 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
   function handleSubmit() {
     if (!validate()) return;
     const db = getDb();
-    const config = getConfig();
-    const changedBy = resolveUser(config);
+    const changedBy = resolveUser(getConfig());
     const ownerName = values.owner === OWNER_NEW ? null : (values.owner.trim() || null);
-    const entryDate = today();
     const assetData = {
       name: values.name.trim(),
       type: values.type as AssetType,
@@ -507,13 +307,16 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
       owner: ownerName,
       owner_id: selectedOwnerId,
       classification: (values.classification || null) as Classification | null,
+      access_restrictions: null,
       status: values.status as AssetStatus,
       location: values.location.trim() || null,
-      entry_date: entryDate,
+      entry_date: today(),
       review_date: null,
-      next_review_date: addDays(entryDate, config.defaultReviewPeriodDays),
-      disposal_method: values.disposal_method?.trim() || null,
-      tags: selectedTags,
+      next_review_date: null,
+      disposal_method: null,
+      tags: [],
+      components: [],
+      related_risks: [],
     };
     try {
       if (mode === 'add') {
@@ -521,7 +324,7 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
         appendAuditLog(db, { asset_id: created.id, action: 'create', changed_by: changedBy, diff: {} });
         onNavigate('list');
       } else if (mode === 'edit' && assetId) {
-        const { before, after } = updateAsset(db, assetId, assetData, config.defaultReviewPeriodDays);
+        const { before, after } = updateAsset(db, assetId, assetData);
         appendAuditLog(db, { asset_id: assetId, action: 'update', changed_by: changedBy, diff: computeDiff(before, after) });
         onNavigate('detail', assetId);
       }
@@ -591,10 +394,10 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
     if (key.return) {
       if (focusIndex === FIELDS.length) {
         handleSubmit();
-      } else if (currentField?.kind !== 'owner-select' && currentField?.kind !== 'tag-select') {
+      } else if (currentField?.kind !== 'owner-select') {
         setFocusIndex((i) => Math.min(i + 1, FIELDS.length));
       }
-      // owner-select et tag-select : gérés par leurs composants via onConfirm
+      // owner-select : géré par OwnerSearchSelect via onConfirm/onNewOwner
       return;
     }
   });
@@ -666,17 +469,6 @@ export function AssetForm({ mode, assetId, onNavigate }: AssetFormProps): React.
                     }}
                     onConfirm={() => setFocusIndex(i => Math.min(i + 1, FIELDS.length))}
                     onNewOwner={() => { setNewOwnerMode(true); setNewOwnerFocus(0); }}
-                    onSkipBackward={() => setFocusIndex(i => Math.max(i - 1, 0))}
-                    isActive={isActive}
-                  />
-                ) : field.kind === 'tag-select' ? (
-                  <TagMultiSelect
-                    tags={availableTags}
-                    selected={selectedTags}
-                    onChange={setSelectedTags}
-                    onTagCreated={() => setAvailableTags(listTags(getDb()))}
-                    onConfirm={() => setFocusIndex(i => Math.min(i + 1, FIELDS.length))}
-                    onSkipBackward={() => setFocusIndex(i => Math.max(i - 1, 0))}
                     isActive={isActive}
                   />
                 ) : (

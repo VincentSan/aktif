@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { getDb } from '../context.js';
-import { getTagByName, deleteTag, removeTagFromAssets } from '../db/queries/tags.js';
+import { getTagByName, deleteTag } from '../db/queries/tags.js';
 import { t } from '../i18n.js';
 
 export function registerTagDelete(parent: Command): void {
@@ -16,9 +16,7 @@ export function registerTagDelete(parent: Command): void {
         process.exit(1);
       }
 
-      const count = removeTagFromAssets(db, existing.name);
       deleteTag(db, existing.id);
       process.stdout.write(`${t('tag_deleted')}${existing.name}${t('tag_deleted_end')}\n`);
-      if (count > 0) process.stdout.write(`${count}${t('tag_assets_updated')}\n`);
     });
 }

@@ -20,12 +20,15 @@ const baseAsset = {
   owner: null,
   owner_id: null,
   classification: null,
+  access_restrictions: null,
   status: 'actif' as const,
   entry_date: '2026-01-01',
   review_date: null,
   next_review_date: null,
   disposal_method: null,
   tags: [],
+  components: [],
+  related_risks: [],
 };
 
 describe('insertAsset + getAssetById', () => {
@@ -49,18 +52,6 @@ describe('insertAsset + getAssetById', () => {
     const inserted = insertAsset(db, { ...baseAsset, tags: ['iso27001', 'serveur'] });
     const found = getAssetById(db, inserted.id);
     expect(found?.tags).toEqual(['iso27001', 'serveur']);
-  });
-
-  it('review_date est null à la création (jamais révisé)', () => {
-    const { db } = createTestDb();
-    const inserted = insertAsset(db, baseAsset);
-    expect(inserted.review_date).toBeNull();
-  });
-
-  it('next_review_date est calculé si fourni', () => {
-    const { db } = createTestDb();
-    const inserted = insertAsset(db, { ...baseAsset, next_review_date: '2027-01-01' });
-    expect(inserted.next_review_date).toBe('2027-01-01');
   });
 });
 

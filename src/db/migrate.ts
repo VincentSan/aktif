@@ -2,16 +2,8 @@ import type { Database } from 'bun:sqlite';
 
 // SQL inliné pour fonctionner dans le binaire compilé (import.meta.dir indisponible)
 const MIGRATIONS: string[] = [
-  // 0000 — schéma final (owners, assets, tags, audit_log)
+  // 0000
   `
-CREATE TABLE IF NOT EXISTS \`owners\` (
-  \`id\` text PRIMARY KEY NOT NULL,
-  \`name\` text NOT NULL,
-  \`email\` text,
-  \`department\` text,
-  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS \`assets\` (
   \`id\` text PRIMARY KEY NOT NULL,
   \`name\` text NOT NULL,
@@ -19,20 +11,20 @@ CREATE TABLE IF NOT EXISTS \`assets\` (
   \`description\` text,
   \`location\` text,
   \`owner\` text,
-  \`owner_id\` text REFERENCES \`owners\`(\`id\`),
+  \`owner_id\` text,
   \`classification\` text,
+  \`access_restrictions\` text,
   \`status\` text DEFAULT 'actif' NOT NULL,
-  \`entry_date\` text DEFAULT (DATETIME('now')) NOT NULL,
+  \`entry_date\` text DEFAULT (DATE('now')) NOT NULL,
   \`review_date\` text,
   \`next_review_date\` text,
   \`disposal_method\` text,
-  \`tags\` text DEFAULT '[]' NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS \`tags\` (
-  \`id\` text PRIMARY KEY NOT NULL,
-  \`name\` text NOT NULL UNIQUE,
-  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL
+  \`tags\` text DEFAULT '[]' NOT NULL,
+  \`components\` text DEFAULT '[]' NOT NULL,
+  \`related_risks\` text DEFAULT '[]' NOT NULL,
+  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL,
+  \`updated_at\` text DEFAULT (DATETIME('now')) NOT NULL,
+  FOREIGN KEY (\`owner_id\`) REFERENCES \`owners\`(\`id\`) ON UPDATE no action ON DELETE no action
 );
 
 CREATE TABLE IF NOT EXISTS \`audit_log\` (
@@ -44,12 +36,19 @@ CREATE TABLE IF NOT EXISTS \`audit_log\` (
   \`diff\` text DEFAULT '{}' NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS \`owners\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL,
+  \`email\` text,
+  \`department\` text,
+  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS \`idx_assets_type\` ON \`assets\`(\`type\`);
 CREATE INDEX IF NOT EXISTS \`idx_assets_status\` ON \`assets\`(\`status\`);
 CREATE INDEX IF NOT EXISTS \`idx_assets_classification\` ON \`assets\`(\`classification\`);
 CREATE INDEX IF NOT EXISTS \`idx_assets_next_review_date\` ON \`assets\`(\`next_review_date\`);
 CREATE INDEX IF NOT EXISTS \`idx_assets_owner\` ON \`assets\`(\`owner\`);
-CREATE INDEX IF NOT EXISTS \`idx_tags_name\` ON \`tags\`(\`name\`);
 CREATE INDEX IF NOT EXISTS \`idx_audit_log_asset_id\` ON \`audit_log\`(\`asset_id\`);
 CREATE INDEX IF NOT EXISTS \`idx_audit_log_changed_at\` ON \`audit_log\`(\`changed_at\`);
 
@@ -64,6 +63,65 @@ CREATE TRIGGER IF NOT EXISTS \`audit_log_no_delete\`
 BEGIN
   SELECT RAISE(ABORT, 'audit_log is append-only');
 END;
+
+CREATE TRIGGER IF NOT EXISTS \`assets_updated_at\`
+  AFTER UPDATE ON \`assets\`
+  FOR EACH ROW
+BEGIN
+  UPDATE \`assets\` SET \`updated_at\` = DATETIME('now') WHERE \`id\` = NEW.\`id\`;
+END;
+  `,
+
+  // 0001 — fusionner entry_date + created_at → entry_date DATETIME, supprimer updated_at
+  `
+CREATE TABLE IF NOT EXISTS \`assets_new\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL,
+  \`type\` text NOT NULL,
+  \`description\` text,
+  \`location\` text,
+  \`owner\` text,
+  \`owner_id\` text REFERENCES \`owners\`(\`id\`),
+  \`classification\` text,
+  \`access_restrictions\` text,
+  \`status\` text DEFAULT 'actif' NOT NULL,
+  \`entry_date\` text DEFAULT (DATETIME('now')) NOT NULL,
+  \`review_date\` text,
+  \`next_review_date\` text,
+  \`disposal_method\` text,
+  \`tags\` text DEFAULT '[]' NOT NULL,
+  \`components\` text DEFAULT '[]' NOT NULL,
+  \`related_risks\` text DEFAULT '[]' NOT NULL
+);
+
+INSERT INTO \`assets_new\`
+  SELECT \`id\`, \`name\`, \`type\`, \`description\`, \`location\`, \`owner\`, \`owner_id\`,
+    \`classification\`, \`access_restrictions\`, \`status\`,
+    \`created_at\` AS \`entry_date\`,
+    \`review_date\`, \`next_review_date\`, \`disposal_method\`,
+    \`tags\`, \`components\`, \`related_risks\`
+  FROM \`assets\`;
+
+DROP TRIGGER IF EXISTS \`assets_updated_at\`;
+DROP TABLE \`assets\`;
+ALTER TABLE \`assets_new\` RENAME TO \`assets\`;
+
+CREATE INDEX IF NOT EXISTS \`idx_assets_type\` ON \`assets\`(\`type\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_status\` ON \`assets\`(\`status\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_classification\` ON \`assets\`(\`classification\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_next_review_date\` ON \`assets\`(\`next_review_date\`);
+CREATE INDEX IF NOT EXISTS \`idx_assets_owner\` ON \`assets\`(\`owner\`);
+  `,
+
+  // 0002 — table tags
+  `
+CREATE TABLE IF NOT EXISTS \`tags\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text NOT NULL UNIQUE,
+  \`created_at\` text DEFAULT (DATETIME('now')) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS \`idx_tags_name\` ON \`tags\`(\`name\`);
   `,
 ];
 

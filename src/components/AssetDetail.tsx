@@ -117,8 +117,11 @@ export function AssetDetail({ assetId, onNavigate }: AssetDetailProps): React.Re
     { label: t('tui_detail_field_entry_date'), value: <Text>{asset.entry_date}</Text> },
     { label: t('tui_detail_field_last_review'), value: <Text>{asset.review_date ?? '—'}</Text> },
     { label: t('tui_detail_field_next_review'), value: <Text>{asset.next_review_date ?? '—'}</Text> },
+    { label: t('tui_detail_field_access'), value: <Text>{asset.access_restrictions ?? '—'}</Text> },
     { label: t('tui_detail_field_disposal'), value: <Text>{asset.disposal_method ?? '—'}</Text> },
     { label: t('tui_detail_field_tags'), value: <Text>{asset.tags.length > 0 ? asset.tags.join(', ') : '—'}</Text> },
+    { label: t('tui_detail_field_components'), value: <Text>{asset.components.length > 0 ? asset.components.map(c => c.version ? `${c.name}@${c.version}` : c.name).join(', ') : '—'}</Text> },
+    { label: t('tui_detail_field_risks'), value: <Text>{asset.related_risks.length > 0 ? asset.related_risks.join(', ') : '—'}</Text> },
   ];
 
   // Split into two columns

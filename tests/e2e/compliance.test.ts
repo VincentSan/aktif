@@ -25,14 +25,14 @@ describe('compliance e2e', () => {
   });
 
   it('asset review avec actifs en retard — exit 1 et actifs listés', async () => {
-    // Créer avec une entry_date ancienne : next_review_date = entry_date + 365j → dans le passé
-    const oldEntryDate = '2018-01-01';
+    // Add assets with past next-review-date
+    const pastDate = '2020-01-01';
     await run(
-      ['asset', 'add', '--name', 'Actif Retard A', '--type', 'matériel', '--entry-date', oldEntryDate],
+      ['asset', 'add', '--name', 'Actif Retard A', '--type', 'matériel', '--next-review-date', pastDate],
       dbPath,
     );
     await run(
-      ['asset', 'add', '--name', 'Actif Retard B', '--type', 'logiciel', '--entry-date', oldEntryDate],
+      ['asset', 'add', '--name', 'Actif Retard B', '--type', 'logiciel', '--next-review-date', pastDate],
       dbPath,
     );
 

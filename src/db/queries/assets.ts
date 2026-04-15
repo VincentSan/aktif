@@ -5,7 +5,6 @@ import type { Db } from '../connection.js';
 import type { Asset } from '../../types/asset.js';
 import type { AssetFilters } from '../../types/filters.js';
 import { serializeJson, rowToAsset } from './utils.js';
-import { addDays, today } from '../../utils/date.js';
 
 export type NewAsset = Omit<Asset, 'id'>;
 
@@ -15,6 +14,8 @@ export function insertAsset(db: Db, data: NewAsset): Asset {
     id,
     ...data,
     tags: serializeJson(data.tags),
+    components: serializeJson(data.components),
+    related_risks: serializeJson(data.related_risks),
   };
   const rows = db.insert(assets).values(values).returning().all();
   return rowToAsset(rows[0]);
@@ -64,18 +65,14 @@ export function searchAssets(db: Db, query: string): Asset[] {
 
 export type AssetUpdate = Partial<Omit<Asset, 'id'>>;
 
-export function updateAsset(db: Db, id: string, changes: AssetUpdate, reviewPeriodDays = 365): { before: Asset; after: Asset } {
+export function updateAsset(db: Db, id: string, changes: AssetUpdate): { before: Asset; after: Asset } {
   const before = getAssetById(db, id);
   if (!before) throw new Error(`Asset introuvable : ${id}`);
 
-  const now = today();
-
   const serialized: Record<string, unknown> = { ...changes };
   if (changes.tags !== undefined) serialized.tags = serializeJson(changes.tags);
-
-  // Mise à jour automatique des dates de revue
-  serialized.review_date = now;
-  serialized.next_review_date = addDays(now, reviewPeriodDays);
+  if (changes.components !== undefined) serialized.components = serializeJson(changes.components);
+  if (changes.related_risks !== undefined) serialized.related_risks = serializeJson(changes.related_risks);
 
   db.update(assets)
     .set(serialized as Partial<typeof assets.$inferInsert>)

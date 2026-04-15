@@ -6,6 +6,7 @@ import { appendAuditLog } from '../db/queries/audit-log.js';
 import { computeDiff } from '../utils/diff.js';
 import { resolveUser } from '../utils/user.js';
 import { ASSET_TYPES, CLASSIFICATIONS, ASSET_STATUSES } from '../types/asset.js';
+import { addDays, today } from '../utils/date.js';
 import { t } from '../i18n.js';
 
 export function registerAssetEdit(asset: Command): void {
@@ -18,9 +19,14 @@ export function registerAssetEdit(asset: Command): void {
     .option('--location <l>', 'Localisation')
     .option('-o, --owner <o>', 'Propriétaire')
     .option('-c, --classification <c>', `Classification (${CLASSIFICATIONS.join('|')})`)
+    .option('--access-restrictions <a>', "Restrictions d'accès")
     .option('-s, --status <s>', `Statut (${ASSET_STATUSES.join('|')})`)
+    .option('--review-date <d>', 'Date de révision (YYYY-MM-DD)')
+    .option('--next-review-date <d>', 'Prochaine révision (YYYY-MM-DD)')
     .option('--disposal-method <m>', 'Méthode de mise au rebut')
     .option('--tags <json>', 'Tags JSON')
+    .option('--components <json>', 'Composants JSON')
+    .option('--related-risks <json>', 'Risques liés JSON')
     .action((id, opts) => {
       if (opts.type && !ASSET_TYPES.includes(opts.type)) {
         process.stderr.write(`${t('err_edit_type')}${opts.type}"\n`);
@@ -49,14 +55,20 @@ export function registerAssetEdit(asset: Command): void {
         changes.owner_id = resolved.id;
       }
       if (opts.classification !== undefined) changes.classification = opts.classification;
+      if (opts.accessRestrictions !== undefined) changes.access_restrictions = opts.accessRestrictions;
       if (opts.status !== undefined) changes.status = opts.status;
-      if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
-      if (opts.tags !== undefined) {
-        try { changes.tags = JSON.parse(opts.tags); } catch { /* ignore */ }
+      if (opts.reviewDate !== undefined) changes.review_date = opts.reviewDate;
+
+      if (opts.nextReviewDate === undefined) {
+        changes.next_review_date = addDays(today(), config.defaultReviewPeriodDays);
+      } else {
+        changes.next_review_date = opts.nextReviewDate;
       }
 
+      if (opts.disposalMethod !== undefined) changes.disposal_method = opts.disposalMethod;
+
       try {
-        const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2], config.defaultReviewPeriodDays);
+        const { before, after } = updateAsset(db, id, changes as Parameters<typeof updateAsset>[2]);
         const diff = computeDiff(before, after);
 
         appendAuditLog(db, {
