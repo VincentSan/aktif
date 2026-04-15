@@ -13,21 +13,21 @@
 
 ### Download binary (recommended)
 
-Download the binary for your platform from [GitHub Releases](https://github.com/votrecompte/aktif/releases):
+Download the binary for your platform from [GitHub Releases](https://github.com/VincentSan/aktif/releases):
 
 ```bash
 # macOS Apple Silicon
-curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-macos-arm64 -o aktif
+curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-macos-arm64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 
 # macOS Intel
-curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-macos-x64 -o aktif
+curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-macos-x64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 
 # Linux x86_64
-curl -L https://github.com/votrecompte/aktif/releases/latest/download/aktif-linux-x64 -o aktif
+curl -L https://github.com/VincentSan/aktif/releases/latest/download/aktif-linux-x64 -o aktif
 chmod +x aktif
 sudo mv aktif /usr/local/bin/
 ```
@@ -35,7 +35,7 @@ sudo mv aktif /usr/local/bin/
 ### Development mode
 
 ```bash
-git clone https://github.com/votrecompte/aktif
+git clone https://github.com/VincentSan/aktif
 cd aktif
 bun install
 bun run src/cli.ts asset list
@@ -49,7 +49,7 @@ Five commands to get started:
 
 ```bash
 # 1. Add an asset
-aktif asset add --name "Production server" --type matériel --owner "Sophie Martin" --classification Confidentiel
+aktif asset add --name "Production server" --type matériel --owner "John Doe" --classification Confidentiel
 
 # 2. List assets
 aktif asset list
@@ -58,7 +58,7 @@ aktif asset list
 aktif asset show <id>
 
 # 4. Edit an asset
-aktif asset edit <id> --classification Secret --owner "Mehdi Benali"
+aktif asset edit <id> --classification Secret --owner "John Doe"
 
 # 5. Delete an asset
 aktif asset delete <id>
@@ -86,23 +86,23 @@ Add a new asset to the inventory.
 aktif asset add --name <name> --type <type> [options]
 ```
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--name <n>` | yes | Asset name |
-| `--type <t>` | yes | `informationnel` \| `logiciel` \| `matériel` \| `service` \| `personnel` |
-| `--description <d>` | no | Functional description |
-| `--location <l>` | no | Physical or logical location |
-| `--owner <o>` | no | Owner name |
-| `--classification <c>` | no | `Public` \| `Interne` \| `Confidentiel` \| `Secret` |
-| `--access-restrictions <a>` | no | Description of access controls |
-| `--status <s>` | no | `actif` (default) \| `en_maintenance` \| `en_cours_de_mise_au_rebut` \| `retiré` |
-| `--entry-date <d>` | no | Entry date YYYY-MM-DD (default: today) |
-| `--review-date <d>` | no | Last review date YYYY-MM-DD |
-| `--next-review-date <d>` | no | Next review date YYYY-MM-DD (default: +365 days) |
-| `--disposal-method <m>` | no | Disposal method |
-| `--tags <json>` | no | Tags JSON, e.g. `'["tag1","tag2"]'` |
-| `--components <json>` | no | Components JSON, e.g. `'[{"name":"nginx","version":"1.25"}]'` |
-| `--related-risks <json>` | no | Risk references, e.g. `'["R-01","R-05"]'` |
+| Flag                        | Required | Description                                                                      |
+| --------------------------- | -------- | -------------------------------------------------------------------------------- |
+| `--name <n>`                | yes      | Asset name                                                                       |
+| `--type <t>`                | yes      | `informationnel` \| `logiciel` \| `matériel` \| `service` \| `personnel`         |
+| `--description <d>`         | no       | Functional description                                                           |
+| `--location <l>`            | no       | Physical or logical location                                                     |
+| `--owner <o>`               | no       | Owner name                                                                       |
+| `--classification <c>`      | no       | `Public` \| `Interne` \| `Confidentiel` \| `Secret`                              |
+| `--access-restrictions <a>` | no       | Description of access controls                                                   |
+| `--status <s>`              | no       | `actif` (default) \| `en_maintenance` \| `en_cours_de_mise_au_rebut` \| `retiré` |
+| `--entry-date <d>`          | no       | Entry date YYYY-MM-DD (default: today)                                           |
+| `--review-date <d>`         | no       | Last review date YYYY-MM-DD                                                      |
+| `--next-review-date <d>`    | no       | Next review date YYYY-MM-DD (default: +365 days)                                 |
+| `--disposal-method <m>`     | no       | Disposal method                                                                  |
+| `--tags <json>`             | no       | Tags JSON, e.g. `'["tag1","tag2"]'`                                              |
+| `--components <json>`       | no       | Components JSON, e.g. `'[{"name":"nginx","version":"1.25"}]'`                    |
+| `--related-risks <json>`    | no       | Risk references, e.g. `'["R-01","R-05"]'`                                        |
 
 Returns the UUID of the created asset.
 
@@ -110,7 +110,7 @@ Returns the UUID of the created asset.
 aktif asset add \
   --name "GitLab server" \
   --type logiciel \
-  --owner "Mehdi Benali" \
+  --owner "John Doe" \
   --classification Confidentiel \
   --tags '["infrastructure","ci-cd"]'
 ```
@@ -127,7 +127,7 @@ aktif asset list [--type <t>] [--classification <c>] [--owner <o>] [--status <s>
 
 ```bash
 aktif asset list --status actif --classification Confidentiel
-aktif asset list --owner "Sophie Martin"
+aktif asset list --owner "John Doe"
 aktif asset list --type logiciel
 ```
 
@@ -290,11 +290,11 @@ Import assets from a CSV file (migration from Excel).
 aktif asset import --file <path> [--strict] [--overwrite]
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--file <path>` | Path to the CSV file |
-| `--strict` | Stop on first error (default: continue) |
-| `--overwrite` | Overwrite asset if ID already exists (default: skip) |
+| Flag            | Description                                          |
+| --------------- | ---------------------------------------------------- |
+| `--file <path>` | Path to the CSV file                                 |
+| `--strict`      | Stop on first error (default: continue)              |
+| `--overwrite`   | Overwrite asset if ID already exists (default: skip) |
 
 ```bash
 aktif asset import --file inventory.csv
@@ -330,7 +330,7 @@ aktif owner add --name <name> [--email <e>] [--department <d>]
 ```
 
 ```bash
-aktif owner add --name "Sophie Martin" --email "sophie@example.com" --department "Security"
+aktif owner add --name "John Doe" --email "john@example.com" --department "Security"
 ```
 
 ---
@@ -367,11 +367,11 @@ Delete an owner. If linked assets exist, you will be prompted to choose how to h
 aktif owner delete <id> [--reassign <owner-id>] [--clear] [--force]
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--reassign <id>` | Reassign linked assets to another owner |
-| `--clear` | Set owner to null on linked assets |
-| `--force` | Delete linked assets along with the owner |
+| Flag              | Description                               |
+| ----------------- | ----------------------------------------- |
+| `--reassign <id>` | Reassign linked assets to another owner   |
+| `--clear`         | Set owner to null on linked assets        |
+| `--force`         | Delete linked assets along with the owner |
 
 ```bash
 aktif owner delete a1b2c3d4 --reassign b2c3d4e5
@@ -461,20 +461,20 @@ The CSV file must be **UTF-8** encoded with a header row. The `name` and `type` 
 
 ```csv
 name,type,description,owner,classification,status,entry_date,next_review_date,location,tags
-Production server,matériel,Main server,Sophie Martin,Confidentiel,actif,2024-01-15,2025-01-15,Paris DC,["production"]
-Office 365 License,logiciel,Office suite,Mehdi Benali,Interne,actif,2023-06-01,2024-06-01,Cloud,,
-Customer database,informationnel,CRM data,Sophie Martin,Secret,actif,2024-03-01,2025-03-01,DB Server,,["crm","gdpr"]
+Production server,matériel,Main server,John Doe,Confidentiel,actif,2024-01-15,2025-01-15,Paris DC,["production"]
+Office 365 License,logiciel,Office suite,Foo Doe,Interne,actif,2023-06-01,2024-06-01,Cloud,,
+Customer database,informationnel,CRM data,John Doe,Secret,actif,2024-03-01,2025-03-01,DB Server,,["crm","gdpr"]
 ```
 
 ### Accepted values
 
-| Column | Values |
-|--------|--------|
-| `type` | `informationnel`, `logiciel`, `matériel`, `service`, `personnel` |
-| `classification` | `Public`, `Interne`, `Confidentiel`, `Secret` |
-| `status` | `actif`, `en_maintenance`, `en_cours_de_mise_au_rebut`, `retiré` |
-| `entry_date`, `next_review_date`, `review_date` | `YYYY-MM-DD` format |
-| `tags`, `components`, `related_risks` | Valid JSON or empty |
+| Column                                          | Values                                                           |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| `type`                                          | `informationnel`, `logiciel`, `matériel`, `service`, `personnel` |
+| `classification`                                | `Public`, `Interne`, `Confidentiel`, `Secret`                    |
+| `status`                                        | `actif`, `en_maintenance`, `en_cours_de_mise_au_rebut`, `retiré` |
+| `entry_date`, `next_review_date`, `review_date` | `YYYY-MM-DD` format                                              |
+| `tags`, `components`, `related_risks`           | Valid JSON or empty                                              |
 
 ### Migration steps
 
@@ -507,7 +507,7 @@ aktif asset review          # overdue assets
 
 # Step 3 — Search and fix gaps
 aktif asset search "server"
-aktif asset edit a1b2c3d4 --owner "Sophie Martin" --classification Confidentiel
+aktif asset edit a1b2c3d4 --owner "John Doe" --classification Confidentiel
 aktif asset edit e5f6a7b8 --next-review-date 2027-03-15
 
 # Step 4 — Check compliance
@@ -543,22 +543,22 @@ Configuration is resolved in this priority order (highest to lowest):
 ```json
 {
   "db": "/path/to/aktif.db",
-  "user": "Sophie Martin",
+  "user": "John Doe",
   "defaultReviewPeriodDays": 365
 }
 ```
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `db` | `~/.aktif/aktif.db` | Path to the SQLite database |
-| `user` | `$USER` | Name used in the audit trail (`changed_by`) |
-| `defaultReviewPeriodDays` | `365` | Default review interval in days |
+| Key                       | Default             | Description                                 |
+| ------------------------- | ------------------- | ------------------------------------------- |
+| `db`                      | `~/.aktif/aktif.db` | Path to the SQLite database                 |
+| `user`                    | `$USER`             | Name used in the audit trail (`changed_by`) |
+| `defaultReviewPeriodDays` | `365`               | Default review interval in days             |
 
 ### Environment variables
 
 ```bash
 export AKTIF_DB=/nas/shared/aktif.db    # shared database on NAS
-export AKTIF_USER="Sophie Martin"       # author for the audit trail
+export AKTIF_USER="John Doe"       # author for the audit trail
 ```
 
 ---
